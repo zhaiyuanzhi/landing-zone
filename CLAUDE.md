@@ -26,13 +26,11 @@ src/
   quality/      # Data quality checks (completeness, outliers)
   utils/        # DB connection helpers
   models/       # (reserved for ORM models)
-data/raw/       # Raw data files (committed to git, organized by source)
-  nbs/          # 统计局
-  wind/         # Wind
-  chinabond/    # 中债数据 (YIELD_30Y etc.)
-  fred/         # FRED free data (T5YIE etc.)
-  market/       # Market data
-  policy/       # Policy/EPU data
+data/raw/       # Raw data files (committed to git, organized by frequency)
+  monthly/      # 月频/季频原始文件（宏观核心、非核心、基准序列、金价）
+  daily/        # 日频原始文件（利率、汇率、信用利差、行情、量化建模）
+  event/        # 事件驱动数据（央行事件日历，不定期更新）
+  news/         # 新闻文本与情绪指数（日频/实时）
 config/         # Settings (settings.toml is gitignored, use settings.example.toml)
 docs/           # Design docs and procurement lists
 logs/           # Log files (gitignored)
@@ -57,7 +55,9 @@ logs/           # Log files (gitignored)
 - Internal derived features use `category='internal_derived'`, `data_source='INTERNAL_CALC'`
 - Daily indicators aggregated to monthly: `source_tag='AGG_FROM_DAILY'`
 - Data revisions: append new `data_version` row, never overwrite; query with `MAX(data_version)`
-- Raw files stay in filesystem (`data/raw/`), naming: `{source}_{content}_{date}.{ext}`
+- Raw files stay in filesystem (`data/raw/`), organized by **frequency**: `monthly/`, `daily/`, `event/`, `news/`
+- File naming: `{batch}_{YYYYMMDD}.xlsx`，例如 `macro_20260301.xlsx`、`rates_20260301.xlsx`
+- 所有原始数据均通过 **Choice 终端**导出；按批次（B1–B7）一次导出多个指标，见 `docs/数据采集进度.md`
 - NULL means "not yet published" — never fill with 0 or mean
 
 ## Common Commands
@@ -66,9 +66,10 @@ logs/           # Log files (gitignored)
 # Initialize database
 bash db/init.sh
 
-# Run ETL
-python -m src.etl.load_macro_monthly --file data/raw/nbs/统计局_20260211.xlsx
-python -m src.etl.load_macro_daily --file data/raw/chinabond/yield_30y_20260216.csv
+# Run ETL（文件路径按新目录结构）
+python -m src.etl.load_macro_monthly --file data/raw/monthly/macro_20260301.xlsx
+python -m src.etl.load_macro_daily   --file data/raw/daily/rates_20260301.xlsx
+python -m src.etl.load_market_daily  --file data/raw/daily/market_20260301.xlsx
 python -m src.etl.load_derived_daily --month 2026-02
 
 # Build monthly snapshot
