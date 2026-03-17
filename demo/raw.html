@@ -169,8 +169,8 @@
   .stat { display: flex; flex-direction: column; }
   .stat-label { font-size: 10px; color: var(--text2); }
   .stat-val   { font-size: 15px; font-weight: 600; font-family: var(--mono); }
-  .stat-val.up   { color: var(--green); }
-  .stat-val.down { color: var(--red); }
+  .stat-val.up   { color: var(--red); }    /* A股惯例：红涨 */
+  .stat-val.down { color: var(--green); } /* A股惯例：绿跌 */
   .stat-val.flat { color: var(--amber); }
 
   .change-badge {
@@ -179,8 +179,8 @@
     border-radius: 4px;
     margin-left: 4px;
   }
-  .change-badge.up   { background: rgba(52,201,126,.15); color: var(--green); }
-  .change-badge.down { background: rgba(247,90,90,.15);  color: var(--red);   }
+  .change-badge.up   { background: rgba(247,90,90,.15);   color: var(--red);   } /* 红涨 */
+  .change-badge.down { background: rgba(52,201,126,.15); color: var(--green); } /* 绿跌 */
 
   /* ── Sparkline ── */
   .sparkline-wrap { position: relative; height: 60px; }
@@ -246,7 +246,7 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <h1>Landing Zone</h1>
-      <p>Raw Data Preview · 2025–2026</p>
+      <p>Raw Data Preview · 2024–2026</p>
     </div>
     <div class="nav-section">数据分类</div>
     <div class="nav-item active" data-section="section1" onclick="switchSection('section1', this)">
@@ -278,6 +278,7 @@
       <span class="sub" id="topbar-sub">14 个指标 · 数据来源 Choice 终端</span>
       <div class="filter-group">
         <button class="filter-btn active" onclick="setYear('all', this)">全部</button>
+        <button class="filter-btn" onclick="setYear('2024', this)">2024</button>
         <button class="filter-btn" onclick="setYear('2025', this)">2025</button>
         <button class="filter-btn" onclick="setYear('2026', this)">2026</button>
       </div>

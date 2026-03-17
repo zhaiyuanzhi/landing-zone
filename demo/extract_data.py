@@ -25,7 +25,7 @@ def read_choice_monthly(path: Path, col_map: dict) -> dict:
         dates, values = [], []
         for _, row in df.iloc[3:].iterrows():
             date_val = str(row[1]) if pd.notna(row[1]) else ""
-            if len(date_val) >= 4 and date_val[:4] in ("2025", "2026"):
+            if len(date_val) >= 4 and date_val[:4] in ("2024", "2025", "2026"):
                 label = date_val[:7] if len(date_val) >= 7 else date_val[:4]
                 try:
                     v = float(row[col_idx]) if pd.notna(row[col_idx]) else None
@@ -49,7 +49,7 @@ def read_choice_daily(path: Path, col_map: dict) -> dict:
                 continue
             try:
                 dt = pd.to_datetime(row[1])
-                if dt.year not in (2025, 2026):
+                if dt.year not in (2024, 2025, 2026):
                     continue
                 v = float(row[col_idx]) if pd.notna(row[col_idx]) else None
                 dates.append(str(dt.date()))
@@ -65,7 +65,7 @@ def read_kline(path: Path, code: str) -> dict:
     df = pd.read_excel(path, sheet_name=0)
     df = df.dropna(subset=["交易时间", "收盘价"])
     df["交易时间"] = pd.to_datetime(df["交易时间"], errors="coerce")
-    df = df[df["交易时间"].dt.year.isin([2025, 2026])]
+    df = df[df["交易时间"].dt.year.isin([2024, 2025, 2026])]
     dates = [str(d.date()) for d in df["交易时间"]]
     values = [round(float(v), 4) for v in df["收盘价"]]
     return {code: {"dates": dates, "values": values}}
@@ -77,7 +77,7 @@ def read_annual(path: Path, col_idx: int, code: str) -> dict:
     dates, values = [], []
     for _, row in df.iloc[3:].iterrows():
         date_val = str(row[1]) if pd.notna(row[1]) else ""
-        if date_val[:4] in ("2025", "2026"):
+        if date_val[:4] in ("2024", "2025", "2026"):
             try:
                 v = float(row[col_idx]) if pd.notna(row[col_idx]) else None
                 dates.append(date_val[:4])
