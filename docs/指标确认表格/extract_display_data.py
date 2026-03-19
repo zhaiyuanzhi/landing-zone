@@ -2,8 +2,8 @@
 extract_display_data.py
 -----------------------
 从 data/raw/ 原始文件提取指标展示表格所需数据，按数据采购清单v3分类输出。
-- 月频/季频指标：纵向展示 2025-03 ~ 2026-03（13个月）
-- 日频指标：横向展示 2026-03 每日数据（日期为列）
+- 月频/季频指标：纵向展示 2025-03 ~ 2026-02（12个月）
+- 日频指标：横向展示 2026-03 每日数据（日期为列），不聚合为月频
 - 分类依据：数据采购清单v3.md
 - 新指标数据来源参考：data/raw/CLAUDE.md
 
@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]  # 项目根目录
 RAW = ROOT / "data" / "raw"
 
 MONTH_START = "2025-03"
-MONTH_END = "2026-03"
+MONTH_END = "2026-02"
 DAILY_MONTH = "2026-03"
 
 
@@ -65,12 +65,6 @@ def to_period(df: pd.DataFrame) -> pd.DataFrame:
     out.index = out.index.to_period("M")
     return out
 
-
-def monthend_agg(df: pd.DataFrame) -> pd.DataFrame:
-    """日频 → 月末最后交易日值。"""
-    monthly = df.resample("ME").last()
-    monthly.index = monthly.index.to_period("M")
-    return monthly
 
 
 def filter_monthly(df: pd.DataFrame) -> pd.DataFrame:
@@ -188,69 +182,48 @@ def load_gdp() -> dict:
 
 
 # ──────────────────────────────────────────────
-# 2. 日频加载器（月末聚合 + 原始日频）
+# 2. 日频加载器（仅提取 DAILY_MONTH 原始日频，不聚合为月频）
 # ──────────────────────────────────────────────
 
-def load_cn_bond_daily():
+def load_cn_bond_daily() -> dict:
     """cn_bond_credit_rates_daily.xlsx → CBOND CGB_3Y CGB_10Y AA DR007"""
     path = RAW / "daily" / "cn_bond_credit_rates_daily.xlsx"
-    df = read_choice_daily(path)
-    monthly = filter_monthly(monthend_agg(df))
-    daily = filter_daily(df)
-    m = {
-        "CBOND_NEW_COMPOSITE_WEALTH": monthly["col0"],  # EMM01590538
-        "CGB_3Y":                     monthly["col1"],  # E1000174
-        "CGB_10Y":                    monthly["col2"],  # E1000180
-        "AA_CREDIT_YIELD_3Y":         monthly["col3"],  # E1000469
-        "DR007":                      monthly["col4"],  # E1300004
+    daily = filter_daily(read_choice_daily(path))
+    return {
+        "CBOND_NEW_COMPOSITE_WEALTH": daily["col0"],  # EMM01590538
+        "CGB_3Y":                     daily["col1"],  # E1000174
+        "CGB_10Y":                    daily["col2"],  # E1000180
+        "AA_CREDIT_YIELD_3Y":         daily["col3"],  # E1000469
+        "DR007":                      daily["col4"],  # E1300004
     }
-    d = {
-        "CGB_3Y":             daily["col1"],
-        "CGB_10Y":            daily["col2"],
-        "AA_CREDIT_YIELD_3Y": daily["col3"],
-        "DR007":              daily["col4"],
-    }
-    return m, d
 
 
-def load_bond_cgb_1y():
+def load_bond_cgb_1y() -> dict:
     """bond_CGB_1y.xlsx → CGB_1Y"""
     path = RAW / "daily" / "bond_CGB_1y.xlsx"
-    df = read_choice_daily(path, skip_rows=10)
-    monthly = filter_monthly(monthend_agg(df))
-    daily = filter_daily(df)
-    return {"CGB_1Y": monthly["col0"]}, {"CGB_1Y": daily["col0"]}  # E1000172
+    daily = filter_daily(read_choice_daily(path, skip_rows=10))
+    return {"CGB_1Y": daily["col0"]}  # E1000172
 
 
-def load_cross_market_daily():
+def load_cross_market_daily() -> dict:
     """cross_market.xlsx → BRENT VIX FX_CNY_MID（gold 已拆至 gold.xlsx）"""
     path = RAW / "daily" / "cross_market.xlsx"
-    df = read_choice_daily(path)
-    monthly = filter_monthly(monthend_agg(df))
-    daily = filter_daily(df)
-    m = {
-        "BRENT_CRUDE": monthly["col0"],  # EMM01588169
-        "VIX":         monthly["col1"],  # EMG00002651
-        "FX_CNY_MID":  monthly["col2"],  # EMM00058124
+    daily = filter_daily(read_choice_daily(path))
+    return {
+        "BRENT_CRUDE": daily["col0"],  # EMM01588169
+        "VIX":         daily["col1"],  # EMG00002651
+        "FX_CNY_MID":  daily["col2"],  # EMM00058124
     }
-    d = {
-        "BRENT_CRUDE": daily["col0"],
-        "VIX":         daily["col1"],
-        "FX_CNY_MID":  daily["col2"],
-    }
-    return m, d
 
 
-def load_gold_daily():
+def load_gold_daily() -> dict:
     """gold.xlsx → XAUUSD"""
     path = RAW / "daily" / "gold.xlsx"
-    df = read_choice_daily(path, skip_rows=10)
-    monthly = filter_monthly(monthend_agg(df))
-    daily = filter_daily(df)
-    return {"XAUUSD": monthly["col0"]}, {"XAUUSD": daily["col0"]}  # EMI01778678
+    daily = filter_daily(read_choice_daily(path, skip_rows=10))
+    return {"XAUUSD": daily["col0"]}  # EMI01778678
 
 
-def load_kline_all():
+def load_kline_all() -> dict:
     """K线导出 → CSI300_TR CSI300 AU9999 NHCI"""
     files = {
         "CSI300_TR": RAW / "daily" / "K线导出_H00300_日线数据.xlsx",
@@ -258,14 +231,11 @@ def load_kline_all():
         "AU9999":    RAW / "daily" / "K线导出_AU9999_日线数据.xlsx",
         "NHCI":      RAW / "daily" / "K线导出_NHCI_日线数据.xlsx",
     }
-    m, d = {}, {}
+    d = {}
     for code, path in files.items():
-        df = read_kline(path)
-        monthly = filter_monthly(monthend_agg(df))
-        daily = filter_daily(df)
-        m[code] = monthly["close"]
+        daily = filter_daily(read_kline(path))
         d[code] = daily["close"]
-    return m, d
+    return d
 
 
 # ──────────────────────────────────────────────
@@ -310,7 +280,7 @@ INDICATOR_META = {
     "XAUUSD":                ("COMEX黄金期货收盘价(连续)", "EMI01778678", "COMEX", 1),
     "VIX":                   ("标准普尔500波动率指数(VIX)", "EMG00002651", "CBOE", 2),
     "MMF_7D_YIELD_M":        ("货币市场基金月均七日年化收益率", "EMI01516342", "基金业协会", 4),
-    "CBOND_NEW_COMPOSITE_WEALTH": ("中债新综合财富指数(月末值)", "EMM01590538", "中债", 4),
+    "CBOND_NEW_COMPOSITE_WEALTH": ("中债新综合财富指数", "EMM01590538", "中债", 4),
     "CSI300_TR":             ("沪深300全收益(收盘价)", "H00300", "中证", 2),
     "CSI300":                ("沪深300(收盘价)", "000300", "中证", 2),
     "AU9999":                ("黄金9999(收盘价)", "AU9999", "上金所", 2),
@@ -359,8 +329,9 @@ SECTIONS = [
         ("日频", ["BRENT_CRUDE", "XAUUSD", "VIX"], True),
     ]),
     ("9. 大类资产建模数据", [
-        ("月频", ["MMF_7D_YIELD_M", "CBOND_NEW_COMPOSITE_WEALTH"], False),
-        ("日频", ["CSI300_TR", "CSI300", "AU9999", "NHCI"], True),
+        ("月频", ["MMF_7D_YIELD_M"], False),
+        ("日频", ["CBOND_NEW_COMPOSITE_WEALTH", "CSI300_TR", "CSI300",
+                  "AU9999", "NHCI"], True),
     ]),
 ]
 
@@ -492,28 +463,13 @@ def main():
     monthly_data.update(load_cash_mmf_yld())
     monthly_data.update(load_gdp())
 
-    # --- 日频（月末聚合 → monthly_data；原始 → daily_data）---
+    # --- 日频（仅提取 DAILY_MONTH 原始数据，不聚合为月频）---
     daily_data: dict[str, pd.Series] = {}
-
-    cn_bond_m, cn_bond_d = load_cn_bond_daily()
-    monthly_data.update(cn_bond_m)
-    daily_data.update(cn_bond_d)
-
-    cgb1y_m, cgb1y_d = load_bond_cgb_1y()
-    monthly_data.update(cgb1y_m)
-    daily_data.update(cgb1y_d)
-
-    cross_m, cross_d = load_cross_market_daily()
-    monthly_data.update(cross_m)
-    daily_data.update(cross_d)
-
-    gold_m, gold_d = load_gold_daily()
-    monthly_data.update(gold_m)
-    daily_data.update(gold_d)
-
-    kline_m, kline_d = load_kline_all()
-    monthly_data.update(kline_m)
-    daily_data.update(kline_d)
+    daily_data.update(load_cn_bond_daily())
+    daily_data.update(load_bond_cgb_1y())
+    daily_data.update(load_cross_market_daily())
+    daily_data.update(load_gold_daily())
+    daily_data.update(load_kline_all())
 
     # --- 生成 Markdown ---
     md = generate_markdown(monthly_data, daily_data)
@@ -522,9 +478,9 @@ def main():
     print(f"已写入 {out_path}")
 
     # 汇总统计
-    m_count = sum(1 for k, v in monthly_data.items() if v is not None and v.notna().any())
-    d_count = sum(1 for k, v in daily_data.items() if v is not None and v.notna().any())
-    print(f"月频指标（含日频月末聚合）：{m_count} 个")
+    m_count = sum(1 for v in monthly_data.values() if v is not None and v.notna().any())
+    d_count = sum(1 for v in daily_data.values() if v is not None and v.notna().any())
+    print(f"月频指标：{m_count} 个")
     print(f"日频指标（{DAILY_MONTH}）：{d_count} 个")
 
 
