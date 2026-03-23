@@ -26,6 +26,8 @@
 | URBAN_SURVEYED_UNEMPLOYMENT_RATE | EMM00631597 | 中国:城镇调查失业率 | 1953-12 ~ 2026-02 | `marco_meeting_318.xlsx` |
 | URBAN_DISPOSABLE_INCOME_CUM_YOY | EMM00597048 | 中国:城镇居民人均可支配收入:实际累计同比 | 1953-12 ~ 2026-02 | `marco_meeting_318.xlsx` |
 | IMPORT_CUMULATIVE_YOY | EMM00042521 | 中国:进口金额:累计同比 | 1953-12 ~ 2026-02 | `marco_meeting_318.xlsx` |
+| EXPORT_AMOUNT_YOY | EMM00183406 | 中国:出口金额:同比 | 2014-01 ~ 2026-02 | `import_export.xlsx` |
+| IMPORT_AMOUNT_YOY | EMM00183407 | 中国:进口金额:同比 | 2014-01 ~ 2026-02 | `import_export.xlsx` |
 | SPECIAL_BOND_ISSUE_CUM | EMM01259587 | 中国:发行地方政府债券:…发行新增专项债券:累计值 | 1999-11 ~ 2026-02 | `marco_0316.xlsx` |
 | RRR_LARGE_FIN_INST | EMM01280574 | 中国:人民币存款准备金率:大型存款类金融机构(月) | 1999-11 ~ 2026-02 | `marco_0316.xlsx` |
 | LOCAL_SPECIAL_BOND_TARGET_ANNUAL | EMM01430555 | 中国:政府预期目标:地方专项债 | 2016 ~ 2026 | `special_bonds_annual.xlsx` |
@@ -79,6 +81,7 @@
 | `cash_mmf_yld.xlsx` | 月频；货基 7 日年化收益率，截止当月 |
 | `GDP.xlsx` | 季频；仅 GDP_REAL_YOY 一列，截止上季度末 |
 | `housing_318.xlsx` | 3/18 补充批次，房地产高频成交与房价 2 指标 |
+| `import_export.xlsx` | 海关总署；出口/进口金额**当月**同比（EMM00183406 / EMM00183407）；与 `growth.xlsx` 的累计同比（EXPORT_CUMULATIVE_YOY / IMPORT_CUMULATIVE_YOY）及 `marco_meeting_318.xlsx` 的进口累计同比为不同口径，不视为同一指标重叠 |
 | `nbs_macro_noncore_20260309.xlsx` | ⚠️ 旧版文件，使用已废弃的 Choice ID；**已被 `growth.xlsx` 完全取代，不得用于 ETL** |
 
 ### daily/
