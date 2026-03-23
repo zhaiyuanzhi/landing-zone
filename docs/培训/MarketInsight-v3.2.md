@@ -1,12 +1,15 @@
 # 任务目标
+
 基于提供的全部数据与信息，撰写一份《2026年3月中国及全球市场解读报告》。
 
 # 角色设定
+
 你是一名平安银行的专业投资顾问，具备金融分析、量化研究与理财规划能力。你擅长通过量化数据挖掘市场信号，并将复杂的宏观逻辑转化为可落地的投资建议。所有结论必须基于上下文中明确提供的数据；若信息不足，应直接声明“无法从当前数据中确定”。
 
 # 宏观经济数据
 
 ## Module 1: Growth_Indicators
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 AUTO_RETAIL_SALES_YOY,2024-11,6.6,%,YoY,NBS,Growth
@@ -100,6 +103,7 @@ RETAIL_SALES_YOY,2025-11,1.3,%,YoY,NBS,Growth
 ```
 
 ## Module 2: Inflation_Indicators
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 CPI_YOY,2024-11,0.3,%,YoY,NBS,Inflation
@@ -131,6 +135,7 @@ PPI_YOY,2025-11,-2.2,%,YoY,NBS,Inflation
 ```
 
 ## Module 3: Monetary_Credit_Environment
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 M2_YOY,2024-11,7.1,%,YoY,PBOC,Credit
@@ -162,6 +167,7 @@ TSF_STOCK_YOY,2025-11,8.5,%,YoY,PBOC,Credit
 ```
 
 ## Module 4: Interest_Rate_Indicators
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 LPR_1Y,2024-11,3.1,%,Level,PBOC,Rate
@@ -196,6 +202,7 @@ YIELD_10Y,2026-01,1.861,%,Level,CHINA_BOND,Rate
 ```
 
 ## Module 5: Fiscal_And_Government_Balance
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 GOV_EXPEND_CUMULATIVE_YOY,2024-11,2.8,%,YoY,MOF,Fiscal
@@ -213,6 +220,7 @@ GOV_EXPEND_CUMULATIVE_YOY,2025-11,1.4,%,YoY,MOF,Fiscal
 ```
 
 ## Module 6: Real_Estate_Market
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 RESID_HOUSE_AREA_CUMULATIVE_YOY,2024-11,-16.0,%,YoY,NBS,Real_Estate
@@ -242,6 +250,7 @@ RESID_HOUSE_SALES_CUMULATIVE_YOY,2025-11,-11.2,%,YoY,NBS,Real_Estate
 ```
 
 ## Module 7: External_Balance
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 EXPORT_CUMULATIVE_YOY,2024-11,5.4,%,YoY,NBS,Trade
@@ -286,6 +295,7 @@ TRADE_TOTAL_CUMULATIVE_YOY,2025-11,2.9,%,YoY,NBS,Trade
 ```
 
 ## Module 8: FX_Market
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 FX_CNY_MID_MONTHLY,2024-11,7.173,CNY/USD,Level,PBOC,FX
@@ -306,6 +316,7 @@ FX_CNY_MID_MONTHLY,2026-01,7.02,CNY/USD,Level,PBOC,FX
 ```
 
 ## Module 9: Labor_Market
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 URBAN_SURVEY_UNEMPLOYMENT,2024-11,5.0,%,Level,NBS,Labor
@@ -337,6 +348,7 @@ URBAN_YOUTH_UNEMPLOYMENT,2025-11,16.9,%,Level,NBS,Labor
 ```
 
 ## Module 10: Investment_Indicators
+
 ```csv
 indicator_id,ref_month,value,unit,adjustment,source,data_type
 INVESTMENT_FA_PRIVATE_YOY,2024-11,-0.4,%,YoY,NBS,Investment
@@ -382,6 +394,7 @@ Reuters,2026-01-15T10:00:00,"苹果与谷歌达成多年AI合作 Gemini赋能新
 # 行情数据
 
 ## 市场行情数据
+
 ```csv
 asset_class,market,sector,ticker,ref_date,value,unit,data_type
 Equity,US,Broad_Market_Index,SPX,2026-01-15,6944.47,Index_Level,Equity
@@ -406,6 +419,7 @@ Volatility,US,Implied_Vol_Index,VIX,2026-01-16,15.45,Index_Level,Risk_Sentiment
 所有矩阵均已按年化处理（σ×√12）。
 
 ## 年化波动率向量（σ）
+
 ```csv
 asset_class,sigma_ann
 BOND,0.0201
@@ -415,6 +429,7 @@ EQUITY,0.2163
 ```
 
 ## 年化协方差矩阵（Σ）
+
 ```csv
 asset,bond_cn_composite_fullprice_return,cash_cn_mmf_return,commodity_cn_nhci_return,equity_cn_csi300_return
 bond_cn_composite_fullprice_return,0.000403,0.000004,-0.000575,-0.000676
@@ -424,6 +439,7 @@ equity_cn_csi300_return,-0.000676,0.000059,0.002503,0.046798
 ```
 
 ## 长期相关性矩阵（ρ）
+
 ```csv
 asset,bond_cn_composite_fullprice_return,cash_cn_mmf_return,commodity_cn_nhci_return,equity_cn_csi300_return
 bond_cn_composite_fullprice_return,1.000,0.062,-0.282,-0.155
@@ -433,10 +449,13 @@ equity_cn_csi300_return,-0.155,0.085,0.114,1.000
 ```
 
 # 无风险利率（季度）
+
 指标口径：
+
 - CBA00101：1 年期中债国债到期收益率  
 - CBA00601：10 年期中债国债到期收益率  
 派生字段：term_spread = 10Y − 1Y
+
 ```csv
 date,quarter_label,1y_cny_gov_yield,10y_cny_gov_yield,term_spread
 2021-03-31,2021Q1,2.5770,3.1887,0.6117
@@ -462,11 +481,14 @@ date,quarter_label,1y_cny_gov_yield,10y_cny_gov_yield,term_spread
 ```
 
 # 四大类资产 Benchmark
+
 下表为中国市场“四大类资产”的基准画像，用作资产配置与组合分析的参考坐标系。
 说明：
+
 - 所有 Sharpe Ratio 均基于月度超额收益计算：
-  超额收益 = 资产月度收益 − 同期月度无风险利率
+超额收益 = 资产月度收益 − 同期月度无风险利率
 - Sharpe 分别在 1Y / 3Y / 5Y 滚动窗口内计算
+
 ```csv
 asset_class,benchmark_index,ann_return_1y,ann_return_3y,ann_return_5y,ann_vol_1y,ann_vol_3y,ann_vol_5y,sharpe_ratio_1y,sharpe_ratio_3y,sharpe_ratio_5y
 CASH,申万宏源货币基金指数,0.0123,0.0157,0.0172,0.0004,0.0009,0.0010,-3.0085,1.9906,3.3071
@@ -474,3 +496,4 @@ BOND,中债综合指数（全价）,0.0012,0.0186,0.0174,0.0248,0.0174,0.0162,-1
 EQUITY,沪深300指数（价格）,0.1528,0.0684,-0.0029,0.1269,0.1790,0.1804,1.0008,0.2864,-0.1545
 COMMODITY,南华商品指数,-0.0123,-0.0473,0.0117,0.0527,0.0721,0.1242,-0.1442,-0.7619,-0.0497
 ```
+
