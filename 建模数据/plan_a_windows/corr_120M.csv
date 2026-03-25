@@ -1,0 +1,5 @@
+asset,cash_cn_mmf_return,bond_cn_composite_fullprice_return,equity_cn_csi300_return,commodity_cn_nhci_return
+cash_cn_mmf_return,1.0,0.6255,-0.0856,-0.1273
+bond_cn_composite_fullprice_return,0.6255,1.0,-0.2535,-0.0565
+equity_cn_csi300_return,-0.0856,-0.2535,1.0,0.1456
+commodity_cn_nhci_return,-0.1273,-0.0565,0.1456,1.0

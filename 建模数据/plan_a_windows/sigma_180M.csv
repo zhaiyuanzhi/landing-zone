@@ -1,0 +1,5 @@
+asset_class,sigma_ann
+CASH,0.0048
+BOND,0.0201
+EQUITY,0.2134
+COMMODITY,0.125
