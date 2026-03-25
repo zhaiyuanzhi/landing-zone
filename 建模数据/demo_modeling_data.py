@@ -1,9 +1,9 @@
 """Demo: 大类资产建模数据加工
 
-从 data/raw/ 读取原始 Excel，加工为建模所需的月频序列，输出到 Excel。
+从 data/raw/ 读取原始 Excel，加工为建模所需的月频序列，输出到 CSV。
 
 Step 1: CGB_1Y → 月频无风险利率 r_f
-Step 2: 扩展至全部 6 个建模指标（方案 A 五条资产腿 + r_f）
+Step 2: 扩展至全部 6 个建模指标（方案 A 五条资产腿 + r_f）+ CGB_10Y
 
 Usage:
     python docs/建模数据/demo_modeling_data.py
@@ -14,9 +14,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-RAW_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
+RAW_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
 OUT_DIR = Path(__file__).resolve().parent
-OUT_FILE = OUT_DIR / "建模月频序列.xlsx"
+OUT_FILE = OUT_DIR / "建模月频序列.csv"
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +146,15 @@ def main():
     results["r_cmdty_A"] = r_cmdty
     print(f"\n[NHCI] 日频 {len(nhci_daily)} 条 → 月频 {len(nhci_monthly)} 条")
 
+    # --- CGB_10Y: 10年国债收益率 ---
+    cgb10y_daily = read_choice_indicator(
+        RAW_DIR / "daily" / "cn_bond_credit_rates_daily.xlsx", col_index=4
+    )
+    cgb10y_monthly = to_month_end(cgb10y_daily).rename("CGB_10Y_pct")
+    results["CGB_10Y_月末值(%)"] = cgb10y_monthly
+    print(f"\n[CGB_10Y] 日频 {len(cgb10y_daily)} 条 → 月频 {len(cgb10y_monthly)} 条")
+    print(f"  最新月: {cgb10y_monthly.index[-1]:%Y-%m}  CGB_10Y={cgb10y_monthly.iloc[-1]:.4f}%")
+
     # --- CBOND_NEW_COMPOSITE_WEALTH: 固收主腿（方案A） ---
     cbond_daily = read_choice_indicator(
         RAW_DIR / "daily" / "cn_bond_credit_rates_daily.xlsx", col_index=2
@@ -166,8 +175,8 @@ def main():
 
     # --- 合并输出 ---
     df_out = pd.DataFrame(results)
-    df_out.index.name = "month"
-    df_out.to_excel(OUT_FILE)
+    df_out.index.name = "指标代码"
+    df_out.to_csv(OUT_FILE, encoding="utf-8-sig")
     print(f"\n✓ 已保存至 {OUT_FILE}")
     print(f"  总行数: {len(df_out)}, 列数: {len(df_out.columns)}")
     print(f"  时间范围: {df_out.index[0]:%Y-%m} ~ {df_out.index[-1]:%Y-%m}")
