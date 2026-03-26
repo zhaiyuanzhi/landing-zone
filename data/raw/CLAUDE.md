@@ -76,7 +76,7 @@
 | `growth.xlsx` | NBS / 海关合并文件；采购清单内保留 RETAIL_SALES_YOY / CONSUMER_CONFIDENCE / MANUFACTURING_INVEST_CUM_YOY / REAL_ESTATE_INVEST_CUM_YOY / INFRA_INVEST_CUM_YOY / RESID_HOUSE_SALES_CUMULATIVE_YOY / PMI_NEW_EXPORT_ORDERS，`EXPORT_CUMULATIVE_YOY` 已移出有效清单并在 ETL 中跳过 |
 | `GDP.xlsx` | 季频；仅 GDP_REAL_YOY 一列，截止上季度末 |
 | `import_export.xlsx` | 海关总署；出口/进口金额**当月**同比（EMM00183406 / EMM00183407）；与 `growth.xlsx` 的累计同比（EXPORT_CUMULATIVE_YOY / IMPORT_CUMULATIVE_YOY）及 `marco_meeting_318.xlsx` 的进口累计同比为不同口径，不视为同一指标重叠 |
-| `nbs_macro_noncore_20260309.xlsx` | ⚠️ 旧版文件，使用已废弃的 Choice ID；**已被 `growth.xlsx` 完全取代，不得用于 ETL** |
+| `nbs_macro_noncore_20260309.xlsx` | ⚠️ 旧版文件，使用已废弃的 Choice ID；**已被 `growth.xlsx` 完全取代** |
 
 ### daily/
 
@@ -94,6 +94,7 @@
 `VIX.xlsx` · `china_bond.xlsx` · `gdp_quarter.xlsx` · `growth_momentum.xlsx` · `market_1.xlsx` · `oil.xlsx` · `rates.xlsx` · `公开市场操作.xlsx`
 
 `cash_mmf_yld.xlsx` —— 仅含 `MMF_7D_YIELD_M`，该指标不在《数据采购清单v3》中，移入 deprecated/
+`nbs_macro_noncore_20260309.xlsx` —— 使用已废弃的 Choice ID，且已被 `growth.xlsx` 完全取代；不得用于 ETL，移入 deprecated/
 
 `housing_318.xlsx` —— 仅含 `PROPERTY_SALES_AREA_30CITIES_ROLLING12M_YOY`、`HOUSE_PRICE_70CITY_SECONDHAND_YOY`，两指标均不在《数据采购清单v3》中，移入 deprecated/
 
