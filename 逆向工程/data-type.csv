@@ -3,8 +3,6 @@ GDP_REAL_YOY,中国:GDP:不变价:当季同比,Growth
 PMI_MANU,中国:PMI,Growth
 PMI_SERV,中国:非制造业PMI,Growth
 INDUSTRY_YOY,工业增加值:同比,Growth
-CPI_YOY,CPI:同比,Inflation
-PPI_YOY,PPI:同比,Inflation
 RETAIL_SALES_YOY,社会消费品零售总额,Growth
 CONSUMER_CONFIDENCE,消费者信心指数,Growth
 INFRA_INVEST_CUM_YOY,基建投资累计同比,Investment
@@ -17,8 +15,8 @@ PMI_NEW_EXPORT_ORDERS,PMI新出口订单,Trade
 FX_CNY_MID,中间价:美元兑人民币,FX
 M2_YOY,M2:同比,Credit
 M1_YOY,M1:同比,Credit
-DR007,DR007,Rate
 TSF_STOCK_YOY,社融存量:同比,Credit
+DR007,DR007,Rate
 AA_CREDIT_YIELD_3Y,AA信用债收益率(3Y),Rate
 CGB_1Y / 3Y / 10Y,国债收益率,Rate
 LPR_1Y,LPR:1年期,Rate
@@ -27,5 +25,7 @@ GOV_EXPEND_CUMULATIVE_YOY,财政支出累计同比,Fiscal
 SPECIAL_BOND_ISSUE_CUM,专项债发行累计,Fiscal
 LOCAL_SPECIAL_BOND_TARGET_ANNUAL,专项债年度目标,Fiscal
 BRENT_CRUDE,ICE布油期货,Inflation
+CPI_YOY,CPI:同比,Inflation
+PPI_YOY,PPI:同比,Inflation
 XAUUSD,COMEX黄金,Inflation
 VIX,波动率指数,Risk_Sentiment
