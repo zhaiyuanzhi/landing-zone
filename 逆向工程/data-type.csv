@@ -1,4 +1,4 @@
-indicator_id,indicator_name,adjustment,source,data_type,data_type
+indicator_id,indicator_name,unit,adjustment,source,data_type
 GDP_REAL_YOY,中国:GDP:不变价:当季同比,,,,Growth
 INDUSTRY_YOY,工业增加值:同比,,,,Growth
 RETAIL_SALES_YOY,社会消费品零售总额,,,,Growth
