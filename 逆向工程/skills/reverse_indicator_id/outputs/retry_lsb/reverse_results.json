@@ -1,0 +1,30 @@
+[
+  {
+    "raw_indicator_code": "LOCAL_SPECIAL_BOND_TARGET_ANNUAL",
+    "current_meaning": "政府预期目标:地方专项债",
+    "indicator_name": "政府预期目标:地方专项债",
+    "unit": "CNY_100M",
+    "adjustment": "Annual_Target",
+    "source": "MOF",
+    "data_type": "Fiscal",
+    "remark": "",
+    "round1_indicator_id": "LOCAL_SPECIAL_BOND_TARGET",
+    "round1_alternatives": [
+      "LOCAL_SPECIAL_BOND_TARGET_ANNUAL",
+      "LOCAL_SPECIAL_BOND_ISSUANCE_TARGET"
+    ],
+    "round1_confidence": "high",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"LOCAL_SPECIAL_BOND_TARGET\",\n  \"alternative_indicator_ids\": [\n    \"LOCAL_SPECIAL_BOND_TARGET_ANNUAL\",\n    \"LOCAL_SPECIAL_BOND_ISSUANCE_TARGET\"\n  ],\n  \"display_name_cn\": \"地方专项债年度发行目标\",\n  \"naming_rationale_short\": \"指标反映政府对地方专项债的年度预期目标，'TARGET'已隐含年度属性，无需重复'_ANNUAL'；推荐名称简洁且语义清晰，符合财政领域命名惯例。\",\n  \"confidence\": \"high\"\n}",
+    "round2_indicator_id": "LOCAL_SPECIAL_BOND_ANNUAL_TARGET",
+    "round2_alternatives": [
+      "LOCAL_SPECIAL_BOND_TARGET",
+      "LSB_ANNUAL_TARGET"
+    ],
+    "round2_confidence": "high",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"LOCAL_SPECIAL_BOND_ANNUAL_TARGET\",\n  \"alternative_indicator_ids\": [\n    \"LOCAL_SPECIAL_BOND_TARGET\",\n    \"LSB_ANNUAL_TARGET\"\n  ],\n  \"confidence\": \"high\"\n}",
+    "consistency": "medium",
+    "final_indicator_id": "LOCAL_SPECIAL_BOND_TARGET",
+    "final_confidence": "high",
+    "notes": "R1=LOCAL_SPECIAL_BOND_TARGET, R2=LOCAL_SPECIAL_BOND_ANNUAL_TARGET"
+  }
+]

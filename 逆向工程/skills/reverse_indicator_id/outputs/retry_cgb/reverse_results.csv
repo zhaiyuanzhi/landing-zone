@@ -1,0 +1,2 @@
+raw_indicator_code,current_meaning,unit,adjustment,source,data_type,round1_indicator_id,round2_indicator_id,consistency,final_indicator_id,final_confidence,notes
+CGB_3Y,中债国债到期收益率:3年,%,Level,CHINA_BOND,Rate,CGB_3Y_YIELD,CGB_3Y_YIELD,high,CGB_3Y_YIELD,high,

@@ -1,0 +1,30 @@
+[
+  {
+    "raw_indicator_code": "XAUUSD",
+    "current_meaning": "期货收盘价(连续):COMEX黄金",
+    "indicator_name": "期货收盘价(连续):COMEX黄金",
+    "unit": "USD/oz",
+    "adjustment": "Level",
+    "source": "COMEX",
+    "data_type": "Risk_Sentiment",
+    "remark": "由日度转月度",
+    "round1_indicator_id": "XAUUSD",
+    "round1_alternatives": [
+      "GOLD_FUTURES_CLOSE",
+      "COMEX_GOLD"
+    ],
+    "round1_confidence": "high",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"XAUUSD\",\n  \"alternative_indicator_ids\": [\"GOLD_FUTURES_CLOSE\", \"COMEX_GOLD\"],\n  \"display_name_cn\": \"COMEX黄金期货收盘价\",\n  \"naming_rationale_short\": \"XAUUSD是国际通用的黄金兑美元交易代码，语义清晰且被金融市场广泛接受，符合简洁性和专业性要求。\",\n  \"confidence\": \"high\"\n}",
+    "round2_indicator_id": "XAUUSD",
+    "round2_alternatives": [
+      "XAUUSD_CLOSE",
+      "GOLD_FUTURES_COMEX"
+    ],
+    "round2_confidence": "high",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"XAUUSD\",\n  \"alternative_indicator_ids\": [\"XAUUSD_CLOSE\", \"GOLD_FUTURES_COMEX\"],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
+    "final_indicator_id": "XAUUSD",
+    "final_confidence": "high",
+    "notes": ""
+  }
+]

@@ -45,7 +45,7 @@ class QwenClient:
         self,
         system_prompt: str,
         user_message: str,
-        temperature: float = 0.3,
+        temperature: float = 0.1,
         max_tokens: int = 2048,
     ) -> str:
         """Send chat request with retry logic."""

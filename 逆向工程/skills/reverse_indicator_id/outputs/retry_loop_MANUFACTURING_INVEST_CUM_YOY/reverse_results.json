@@ -1,0 +1,30 @@
+[
+  {
+    "raw_indicator_code": "MANUFACTURING_INVEST_CUM_YOY",
+    "current_meaning": "制造业投资:累计同比",
+    "indicator_name": "制造业投资:累计同比",
+    "unit": "%",
+    "adjustment": "YoY",
+    "source": "NBS",
+    "data_type": "Investment",
+    "remark": "",
+    "round1_indicator_id": "MANUFACTURING_INVEST_CUM_YOY",
+    "round1_alternatives": [
+      "MANU_INVEST_CUM_YOY",
+      "MANUFACTURING_INV_CUM_YOY"
+    ],
+    "round1_confidence": "high",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"MANUFACTURING_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"MANU_INVEST_CUM_YOY\", \"MANUFACTURING_INV_CUM_YOY\"],\n  \"display_name_cn\": \"制造业投资累计同比\",\n  \"naming_rationale_short\": \"原代码已符合命名规范，语义清晰：制造业投资 + 累计同比（CUM_YOY），且来自NBS标准口径\",\n  \"confidence\": \"high\"\n}",
+    "round2_indicator_id": "MANUFACTURING_INVEST_CUM_YOY",
+    "round2_alternatives": [
+      "MANU_INVESTMENT_CUM_YOY",
+      "MANUFACTURING_INV_CUM_GROWTH"
+    ],
+    "round2_confidence": "high",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"MANUFACTURING_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\n    \"MANU_INVESTMENT_CUM_YOY\",\n    \"MANUFACTURING_INV_CUM_GROWTH\"\n  ],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
+    "final_indicator_id": "MANUFACTURING_INVEST_CUM_YOY",
+    "final_confidence": "high",
+    "notes": ""
+  }
+]

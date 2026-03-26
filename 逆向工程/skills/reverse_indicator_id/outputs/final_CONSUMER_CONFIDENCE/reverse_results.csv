@@ -1,0 +1,2 @@
+raw_indicator_code,current_meaning,unit,adjustment,source,data_type,round1_indicator_id,round2_indicator_id,consistency,final_indicator_id,final_confidence,notes
+CONSUMER_CONFIDENCE,中国:消费者信心指数,,Level,NBS,Sentiment,CONSUMER_CONFIDENCE,CONSUMER_CONFIDENCE,high,CONSUMER_CONFIDENCE,high,

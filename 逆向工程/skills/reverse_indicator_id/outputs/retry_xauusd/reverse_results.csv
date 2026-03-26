@@ -1,0 +1,2 @@
+raw_indicator_code,current_meaning,unit,adjustment,source,data_type,round1_indicator_id,round2_indicator_id,consistency,final_indicator_id,final_confidence,notes
+XAUUSD,期货收盘价(连续):COMEX黄金,USD/oz,Level,COMEX,Risk_Sentiment,XAUUSD,XAUUSD_COMEX_SETTLE,medium,XAUUSD,high,"R1=XAUUSD, R2=XAUUSD_COMEX_SETTLE"

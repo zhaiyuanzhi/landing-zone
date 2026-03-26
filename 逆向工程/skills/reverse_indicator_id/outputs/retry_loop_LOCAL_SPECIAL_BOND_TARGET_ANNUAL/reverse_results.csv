@@ -1,0 +1,2 @@
+raw_indicator_code,current_meaning,unit,adjustment,source,data_type,round1_indicator_id,round2_indicator_id,consistency,final_indicator_id,final_confidence,notes
+LOCAL_SPECIAL_BOND_TARGET_ANNUAL,政府预期目标:地方专项债,CNY_100M,Annual_Target,MOF,Fiscal,LOCAL_SPECIAL_BOND_TARGET_ANNUAL,LOCAL_SPECIAL_BOND_ANNUAL_TARGET,medium,LOCAL_SPECIAL_BOND_TARGET_ANNUAL,high,"R1=LOCAL_SPECIAL_BOND_TARGET_ANNUAL, R2=LOCAL_SPECIAL_BOND_ANNUAL_TARGET"

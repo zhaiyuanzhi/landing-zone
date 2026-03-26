@@ -1,0 +1,30 @@
+[
+  {
+    "raw_indicator_code": "CONSUMER_CONFIDENCE",
+    "current_meaning": "中国:消费者信心指数",
+    "indicator_name": "中国:消费者信心指数",
+    "unit": "",
+    "adjustment": "Level",
+    "source": "NBS",
+    "data_type": "Sentiment",
+    "remark": "",
+    "round1_indicator_id": "CONSUMER_CONFIDENCE",
+    "round1_alternatives": [
+      "CONSUMER_CONFIDENCE_INDEX",
+      "CHN_CONSUMER_CONFIDENCE"
+    ],
+    "round1_confidence": "high",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"CONSUMER_CONFIDENCE\",\n  \"alternative_indicator_ids\": [\"CONSUMER_CONFIDENCE_INDEX\", \"CHN_CONSUMER_CONFIDENCE\"],\n  \"display_name_cn\": \"消费者信心指数\",\n  \"naming_rationale_short\": \"指标主体明确，'CONSUMER_CONFIDENCE' 是国际通用简洁命名，无需添加 '_INDEX'；国家信息由上下文或元数据承载，不强制体现在字段名中\",\n  \"confidence\": \"high\"\n}",
+    "round2_indicator_id": "CONSUMER_CONFIDENCE",
+    "round2_alternatives": [
+      "CONSUMER_SENTIMENT",
+      "CHINA_CONSUMER_CONFIDENCE"
+    ],
+    "round2_confidence": "high",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"CONSUMER_CONFIDENCE\",\n  \"alternative_indicator_ids\": [\n    \"CONSUMER_SENTIMENT\",\n    \"CHINA_CONSUMER_CONFIDENCE\"\n  ],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
+    "final_indicator_id": "CONSUMER_CONFIDENCE",
+    "final_confidence": "high",
+    "notes": ""
+  }
+]

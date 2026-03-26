@@ -1,0 +1,30 @@
+[
+  {
+    "raw_indicator_code": "CGB_3Y",
+    "current_meaning": "中债国债到期收益率:3年",
+    "indicator_name": "中债国债到期收益率:3年",
+    "unit": "%",
+    "adjustment": "Level",
+    "source": "CHINA_BOND",
+    "data_type": "Rate",
+    "remark": "由日度转月度",
+    "round1_indicator_id": "CGB_3Y",
+    "round1_alternatives": [
+      "CGOV_3Y",
+      "CHINA_GOV_3Y"
+    ],
+    "round1_confidence": "high",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"CGB_3Y\",\n  \"alternative_indicator_ids\": [\"CGOV_3Y\", \"CHINA_GOV_3Y\"],\n  \"display_name_cn\": \"中债国债到期收益率:3年\",\n  \"naming_rationale_short\": \"CGB_3Y 是市场常用缩写，语义清晰，符合金融惯例，无需添加频率或单位信息。\",\n  \"confidence\": \"high\"\n}",
+    "round2_indicator_id": "CGB_3Y_YIELD",
+    "round2_alternatives": [
+      "CGB_3Y",
+      "CHINA_GOV_3Y_YIELD"
+    ],
+    "round2_confidence": "high",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"CGB_3Y_YIELD\",\n  \"alternative_indicator_ids\": [\"CGB_3Y\", \"CHINA_GOV_3Y_YIELD\"],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
+    "final_indicator_id": "CGB_3Y",
+    "final_confidence": "high",
+    "notes": "Near-equiv (optional modifier): R1=CGB_3Y, R2=CGB_3Y_YIELD"
+  }
+]

@@ -14,6 +14,51 @@
 
 如果两轮独立给出相同答案，该命名的可信度显著提升。
 
+### 一致性等级详解
+
+| 等级 | 符号 | 判定条件 | 含义 | 处理方式 |
+|------|------|----------|------|----------|
+| **high** | ✓ | 两轮结果完全一致，或经缩写等价映射后一致（如 `MANU` = `MANUFACTURING`），或仅差一个可选修饰词（如 `CGB_3Y` vs `CGB_YTM_3Y`，`YIELD` 在上下文中已隐含） | 模型在独立上下文中给出了相同的命名判断，说明该 indicator_id 是金融语境下的"自然选择"，具备高可复现性 | 直接采用，无需人工复核 |
+| **medium** | ~ | 两轮结果主干一致但有细微差异：token 重叠度 ≥ 60%（Jaccard），或其中一个是另一个的子串，或一轮的推荐出现在另一轮的备选列表中 | 模型对核心语义的理解一致，但在缩写程度、是否加后缀等"风格"层面存在分歧。例如 `CONSUMER_CONFIDENCE` vs `CONSUMER_CONFIDENCE_INDEX` | 程序自动择优（优先选更简洁、confidence 更高的），但建议人工确认 |
+| **low** | ✗ | 两轮结果差异显著：token 重叠度 < 60%，不存在子串关系，也没有交叉备选命中 | 模型对该指标的命名没有形成稳定共识，可能是指标本身语义模糊、或 prompt 信息不足 | **必须人工复核**，不应直接采用 |
+
+#### 缩写等价映射（comparator 内置）
+
+以下缩写对在比较时视为等价，不会降低一致性等级：
+
+| 缩写 | 等价全称 | 示例 |
+|------|----------|------|
+| MANU | MANUFACTURING | `MANU_INVEST_CUM_YOY` = `MANUFACTURING_INVEST_CUM_YOY` |
+| INFRA | INFRASTRUCTURE | `INFRA_INVEST` = `INFRASTRUCTURE_INVEST` |
+| INVEST | INVESTMENT | `MANU_INVEST` = `MANU_INVESTMENT` |
+| GOV | GOVERNMENT | `GOV_EXPEND` = `GOVERNMENT_EXPEND` |
+| CUM | CUMULATIVE | `EXPORT_CUM` = `EXPORT_CUMULATIVE` |
+| YTM | YIELD | `CGB_YTM_3Y` = `CGB_YIELD_3Y` |
+
+#### 可选修饰词（差一个也算 high）
+
+当两轮结果在 canonicalize 后仅差一个以下"可选修饰词"，且共享 ≥ 2 个核心 token 时，仍判定为 high：
+
+`YIELD` · `INDEX` · `RATE` · `PRICE` · `FUTURES` · `CLOSE` · `SETTLE`
+
+例：`CGB_3Y` vs `CGB_YTM_3Y` → canonicalize 后为 `CGB_3Y` vs `CGB_YIELD_3Y`，差 `YIELD`（可选修饰词），共享 `CGB` + `3Y` ≥ 2 → **high**
+
+### confidence（置信度）
+
+最终 confidence 由三个维度综合打分（取平均后映射）：
+
+| 维度 | 来源 | 权重 |
+|------|------|------|
+| Round 1 confidence | 模型自评 | 1/3 |
+| Round 2 confidence | 模型自评 | 1/3 |
+| consistency | 比较器判定 | 1/3 |
+
+| 综合分 | 最终 confidence |
+|--------|----------------|
+| ≥ 2.5 | high |
+| ≥ 1.5 | medium |
+| < 1.5 | low |
+
 ### indicator_id 命名原则
 
 | 原则 | 说明 |
@@ -111,9 +156,22 @@ indicators:
   -> final_indicator_id=GDP_REAL_YOY  consistency=high  confidence=high
 
 --- Summary ---
-  ✓ GDP_REAL_YOY                          -> GDP_REAL_YOY                    [high]
-  ~ BRENT_CRUDE                           -> BRENT_OIL                       [medium]
-  ✗ SOME_INDICATOR                        -> NEEDS_REVIEW                    [low]
+  ✓ GDP_REAL_YOY                             -> GDP_REAL_YOY                   [high]
+  ✓ BRENT_CRUDE                              -> BRENT_CRUDE                    [high]
+  ✓ XAUUSD                                   -> XAUUSD                         [high]
+  ✓ M1_YOY                                   -> M1_YOY                         [high]
+  ✓ DR007                                    -> DR007                          [high]
+  ✓ AA_CREDIT_YIELD_3Y                       -> AA_CREDIT_YIELD_3Y             [high]
+  ✓ CGB_3Y                                   -> CGB_3Y                         [high]
+  ✓ CONSUMER_CONFIDENCE                      -> CONSUMER_CONFIDENCE            [high]
+  ✓ INFRA_INVEST_CUM_YOY                     -> INFRA_INVEST_CUM_YOY           [high]
+  ✓ MANUFACTURING_INVEST_CUM_YOY             -> MANU_INVEST_CUM_YOY            [high]
+  ✓ REAL_ESTATE_INVEST_CUM_YOY               -> REAL_ESTATE_INVEST_CUM_YOY     [high]
+  ✓ PMI_NEW_EXPORT_ORDERS                    -> PMI_NEW_EXPORT_ORDERS          [high]
+  ✓ EXPORT_AMOUNT_YOY                        -> EXPORT_AMOUNT_YOY              [high]
+  ✓ IMPORT_AMOUNT_YOY                        -> IMPORT_AMOUNT_YOY              [high]
+  ✓ SPECIAL_BOND_ISSUE_CUM                   -> SPECIAL_BOND_ISSUE_CUM         [high]
+  ✓ LOCAL_SPECIAL_BOND_TARGET_ANNUAL         -> LOCAL_SPECIAL_BOND_TARGET_ANNUAL [high]
 ```
 
 ## 扩展

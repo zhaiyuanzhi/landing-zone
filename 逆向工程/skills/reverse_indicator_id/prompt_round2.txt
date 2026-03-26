@@ -8,13 +8,27 @@
 你不能假设自己知道上一轮答案。
 你只能根据当前提供的信息，重新独立给出结果。
 
-命名原则：
+命名原则（严格遵守）：
 1. 语义清晰，专业简洁，适合结构化字段与大模型理解
 2. 使用全大写 + 下划线
-3. 尽量符合金融研究常见习惯
-4. adjustment 若属于指标定义的重要部分，应尽量体现在命名中
-5. “由日度转月度”这类频率处理信息通常不进入 indicator_id
-6. 不要写解释型长字段名，不要随意造不可读缩写
+3. indicator_id 总 token 数（以下划线分词）控制在 2~5 个，最多不超过 6 个
+4. 如果一个金融市场公认缩写已足够清晰，直接采用，不要加后缀
+   - XAUUSD ✓（不要写 XAUUSD_FUTURES_CLOSE、XAUUSD_CME_SETTLE）
+   - DR007 ✓（不要写 DR007_RATE）
+   - BRENT_CRUDE ✓（不要写 BRENT_CRUDE_FUTURES_CLOSING_PRICE_USD_BBL）
+5. 尽量符合金融研究常见习惯，如：
+   - CPI_YOY
+   - PMI_MANU
+   - EXPORT_AMOUNT_YOY
+   - CONSUMER_CONFIDENCE（不加 _INDEX，除非有多个同名指标需要区分）
+6. adjustment 若属于指标定义的重要部分，应尽量体现在命名中
+   - YoY → _YOY
+   - MoM → _MOM
+   - Cumulative YoY → _CUM_YOY
+   - Annual Target → _ANNUAL（放在尾部）
+7. "由日度转月度"这类频率处理信息不进入 indicator_id
+8. 不要写解释型长字段名（如 xxx_FUTURES_CLOSING_PRICE_USD_BBL）
+9. 词序应为：主体 + 细分 + 调整方式，例：LOCAL_SPECIAL_BOND_TARGET_ANNUAL
 
 输入字段：
 - raw_indicator_code

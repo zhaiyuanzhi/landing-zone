@@ -10,18 +10,18 @@
     "remark": "",
     "round1_indicator_id": "GDP_REAL_YOY",
     "round1_alternatives": [
-      "REAL_GDP_YOY",
-      "CHN_GDP_REAL_YOY"
+      "GDP_REAL_QOQ_SEAS_ADJ",
+      "GDP_NOMINAL_YOY"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"GDP_REAL_YOY\",\n  \"alternative_indicator_ids\": [\"REAL_GDP_YOY\", \"CHN_GDP_REAL_YOY\"],\n  \"display_name_cn\": \"中国GDP（不变价）当季同比\",\n  \"naming_rationale_short\": \"采用国际通用缩写惯例，GDP_REAL_YOY 清晰表达实际GDP的同比增长率，符合金融数据命名规范。\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"GDP_REAL_YOY\",\n  \"alternative_indicator_ids\": [\"GDP_REAL_QOQ_SEAS_ADJ\", \"GDP_NOMINAL_YOY\"],\n  \"display_name_cn\": \"中国GDP（不变价）当季同比\",\n  \"naming_rationale_short\": \"GDP_REAL_YOY 清晰表达不变价GDP的当季同比增长，符合金融命名惯例，adjustment为YoY，且已有标准缩写\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "GDP_REAL_YOY",
     "round2_alternatives": [
-      "GDP_REAL_QOQ_ANNUALIZED",
-      "GDP_CONSTANT_PRICES_YOY"
+      "GDP_NSA_YOY",
+      "GDP_QUARTERLY_YOY"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"GDP_REAL_YOY\",\n  \"alternative_indicator_ids\": [\"GDP_REAL_QOQ_ANNUALIZED\", \"GDP_CONSTANT_PRICES_YOY\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"GDP_REAL_YOY\",\n  \"alternative_indicator_ids\": [\n    \"GDP_NSA_YOY\",\n    \"GDP_QUARTERLY_YOY\"\n  ],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "GDP_REAL_YOY",
     "final_confidence": "high",
@@ -38,18 +38,18 @@
     "remark": "由日度转月度",
     "round1_indicator_id": "BRENT_CRUDE",
     "round1_alternatives": [
-      "ICE_BRENT",
-      "BRENT_LEVEL"
+      "BRENT_CRUDE_FUTURES",
+      "ICE_BRENT"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"BRENT_CRUDE\",\n  \"alternative_indicator_ids\": [\"ICE_BRENT\", \"BRENT_LEVEL\"],\n  \"display_name_cn\": \"期货收盘价(连续):ICE布油\",\n  \"naming_rationale_short\": \"Uses standard market abbreviation 'BRENT_CRUDE' which is widely recognized in financial data systems; source (ICE) is implied by convention; no frequency or adjustment suffix needed as it's level data.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"BRENT_CRUDE\",\n  \"alternative_indicator_ids\": [\"BRENT_CRUDE_FUTURES\", \"ICE_BRENT\"],\n  \"display_name_cn\": \"ICE布伦特原油期货收盘价\",\n  \"naming_rationale_short\": \"BRENT_CRUDE 是市场通用缩写，语义清晰且广泛认可，无需添加后缀；adjustment 为 Level，不需额外标注；频率转换细节不纳入命名。\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "BRENT_CRUDE",
     "round2_alternatives": [
-      "ICE_BRENT",
-      "BRENT_PRICE"
+      "BRENT_CRUDE_FUTURES",
+      "ICE_BRENT"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"BRENT_CRUDE\",\n  \"alternative_indicator_ids\": [\"ICE_BRENT\", \"BRENT_PRICE\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"BRENT_CRUDE\",\n  \"alternative_indicator_ids\": [\"BRENT_CRUDE_FUTURES\", \"ICE_BRENT\"],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "BRENT_CRUDE",
     "final_confidence": "high",
@@ -66,18 +66,18 @@
     "remark": "由日度转月度",
     "round1_indicator_id": "XAUUSD",
     "round1_alternatives": [
-      "COMEX_GOLD_PRICE",
-      "GOLD_XAUUSD"
+      "GOLD_FUTURES",
+      "COMEX_GOLD"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"XAUUSD\",\n  \"alternative_indicator_ids\": [\"COMEX_GOLD_PRICE\", \"GOLD_XAUUSD\"],\n  \"display_name_cn\": \"期货收盘价(连续):COMEX黄金\",\n  \"naming_rationale_short\": \"XAUUSD is the widely recognized ticker symbol for COMEX gold futures price in USD/oz; it is standard in financial data systems and trading platforms.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"XAUUSD\",\n  \"alternative_indicator_ids\": [\"GOLD_FUTURES\", \"COMEX_GOLD\"],\n  \"display_name_cn\": \"COMEX黄金期货收盘价\",\n  \"naming_rationale_short\": \"XAUUSD是国际通用的黄金兑美元交易代码，语义清晰且被金融市场广泛认可，符合简洁性和专业性要求。\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "XAUUSD",
     "round2_alternatives": [
-      "GOLD_FUTURES_PRICE",
-      "COMEX_GOLD_PRICE"
+      "GOLD_FUTURES_CLOSE",
+      "COMEX_GOLD"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"XAUUSD\",\n  \"alternative_indicator_ids\": [\"GOLD_FUTURES_PRICE\", \"COMEX_GOLD_PRICE\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"XAUUSD\",\n  \"alternative_indicator_ids\": [\"GOLD_FUTURES_CLOSE\", \"COMEX_GOLD\"],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "XAUUSD",
     "final_confidence": "high",
@@ -94,18 +94,17 @@
     "remark": "",
     "round1_indicator_id": "M1_YOY",
     "round1_alternatives": [
-      "CHN_M1_YOY",
-      "CNY_M1_YOY"
+      "CHN_M1_YOY"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"M1_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_M1_YOY\", \"CNY_M1_YOY\"],\n  \"display_name_cn\": \"中国:M1:同比\",\n  \"naming_rationale_short\": \"M1 is a standard monetary aggregate; 'YOY' clearly indicates year-on-year growth. Widely used in financial research and consistent with global conventions.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"M1_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_M1_YOY\"],\n  \"display_name_cn\": \"中国M1同比\",\n  \"naming_rationale_short\": \"M1_YOY 是金融领域对货币供应量M1同比增长的标准表达，语义清晰且符合惯例，无需额外修饰。\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "M1_YOY",
     "round2_alternatives": [
       "CHN_M1_YOY",
-      "CNY_M1_YOY"
+      "M1_CNY_YOY"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"M1_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_M1_YOY\", \"CNY_M1_YOY\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"M1_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_M1_YOY\", \"M1_CNY_YOY\"],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "M1_YOY",
     "final_confidence": "high",
@@ -123,17 +122,16 @@
     "round1_indicator_id": "DR007",
     "round1_alternatives": [
       "DR007_RATE",
-      "DR_007"
+      "R007"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"DR007\",\n  \"alternative_indicator_ids\": [\"DR007_RATE\", \"DR_007\"],\n  \"display_name_cn\": \"DR007\",\n  \"naming_rationale_short\": \"DR007 is a standard market abbreviation for the 7-day repo rate on China's domestic market; widely recognized in financial data systems and research. No adjustment suffix needed as it's a level value.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"DR007\",\n  \"alternative_indicator_ids\": [\"DR007_RATE\", \"R007\"],\n  \"display_name_cn\": \"存款类金融机构7天期质押式回购利率（DR007）\",\n  \"naming_rationale_short\": \"DR007是市场广泛接受的标准化缩写，语义清晰且无需额外后缀；adjustment为Level，不需添加_YOY等修饰；频率处理细节不纳入命名。\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "DR007",
     "round2_alternatives": [
-      "DR_7D",
-      "DEPOSIT_RATE_7D"
+      "DR007_RATE"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"DR007\",\n  \"alternative_indicator_ids\": [\"DR_7D\", \"DEPOSIT_RATE_7D\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"DR007\",\n  \"alternative_indicator_ids\": [\"DR007_RATE\"],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "DR007",
     "final_confidence": "high",
@@ -151,17 +149,17 @@
     "round1_indicator_id": "AA_CREDIT_YIELD_3Y",
     "round1_alternatives": [
       "CREDIT_YIELD_AA_3Y",
-      "CHN_AA_CREDIT_YIELD_3Y"
+      "AA_BOND_YIELD_3Y"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"AA_CREDIT_YIELD_3Y\",\n  \"alternative_indicator_ids\": [\"CREDIT_YIELD_AA_3Y\", \"CHN_AA_CREDIT_YIELD_3Y\"],\n  \"display_name_cn\": \"AA级信用债收益率（3年）\",\n  \"naming_rationale_short\": \"Uses standard financial abbreviation for credit bond yield with rating (AA) and tenor (3Y); consistent with market conventions and avoids encoding frequency processing in ID.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"AA_CREDIT_YIELD_3Y\",\n  \"alternative_indicator_ids\": [\"CREDIT_YIELD_AA_3Y\", \"AA_BOND_YIELD_3Y\"],\n  \"display_name_cn\": \"AA级信用债收益率（3年）\",\n  \"naming_rationale_short\": \"原始代码已符合命名规范：语义清晰、结构简洁、全大写加下划线，且金融市场通用。保留原代码作为主ID，无需额外后缀。\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "AA_CREDIT_YIELD_3Y",
     "round2_alternatives": [
-      "AA_CRED_YIELD_3Y",
-      "AA_CORP_BOND_YIELD_3Y"
+      "CREDIT_YIELD_AA_3Y",
+      "AA_BOND_YIELD_3Y"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"AA_CREDIT_YIELD_3Y\",\n  \"alternative_indicator_ids\": [\"AA_CRED_YIELD_3Y\", \"AA_CORP_BOND_YIELD_3Y\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"AA_CREDIT_YIELD_3Y\",\n  \"alternative_indicator_ids\": [\"CREDIT_YIELD_AA_3Y\", \"AA_BOND_YIELD_3Y\"],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "AA_CREDIT_YIELD_3Y",
     "final_confidence": "high",
@@ -178,22 +176,22 @@
     "remark": "由日度转月度",
     "round1_indicator_id": "CGB_3Y",
     "round1_alternatives": [
-      "CHINA_CGB_3Y",
-      "CGB_YTM_3Y"
+      "CHINA_GOV_3Y",
+      "CGS_3Y_YTM"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"CGB_3Y\",\n  \"alternative_indicator_ids\": [\"CHINA_CGB_3Y\", \"CGB_YTM_3Y\"],\n  \"display_name_cn\": \"中债国债到期收益率:3年\",\n  \"naming_rationale_short\": \"Uses standard market abbreviation 'CGB' for China Government Bond and '3Y' for 3-year maturity; consistent with financial data conventions and source naming.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"CGB_3Y\",\n  \"alternative_indicator_ids\": [\"CHINA_GOV_3Y\", \"CGS_3Y_YTM\"],\n  \"display_name_cn\": \"中债国债到期收益率:3年\",\n  \"naming_rationale_short\": \"CGB_3Y 是市场通用代码，语义清晰且符合金融惯例，无需扩展频率或单位信息。\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "CGB_3Y_YIELD",
     "round2_alternatives": [
       "CGB_3Y",
-      "CHINA_CGB_3Y_YIELD"
+      "CHINA_GOV_3Y"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"CGB_3Y_YIELD\",\n  \"alternative_indicator_ids\": [\"CGB_3Y\", \"CHINA_CGB_3Y_YIELD\"],\n  \"confidence\": \"high\"\n}",
-    "consistency": "medium",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"CGB_3Y_YIELD\",\n  \"alternative_indicator_ids\": [\"CGB_3Y\", \"CHINA_GOV_3Y\"],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
     "final_indicator_id": "CGB_3Y",
     "final_confidence": "high",
-    "notes": "R1=CGB_3Y, R2=CGB_3Y_YIELD"
+    "notes": "Near-equiv (optional modifier): R1=CGB_3Y, R2=CGB_3Y_YIELD"
   },
   {
     "raw_indicator_code": "CONSUMER_CONFIDENCE",
@@ -206,18 +204,18 @@
     "remark": "",
     "round1_indicator_id": "CONSUMER_CONFIDENCE",
     "round1_alternatives": [
-      "CC_INDEX",
-      "CHN_CONSUMER_CONFIDENCE"
+      "CONSUMER_CONFIDENCE_INDEX",
+      "NBS_CONSUMER_CONFIDENCE"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"CONSUMER_CONFIDENCE\",\n  \"alternative_indicator_ids\": [\"CC_INDEX\", \"CHN_CONSUMER_CONFIDENCE\"],\n  \"display_name_cn\": \"消费者信心指数\",\n  \"naming_rationale_short\": \"Uses standard financial abbreviation for consumer confidence; 'CONSUMER_CONFIDENCE' is widely recognized and aligns with global data conventions. No adjustment suffix needed as it's a level value.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"CONSUMER_CONFIDENCE\",\n  \"alternative_indicator_ids\": [\"CONSUMER_CONFIDENCE_INDEX\", \"NBS_CONSUMER_CONFIDENCE\"],\n  \"display_name_cn\": \"消费者信心指数\",\n  \"naming_rationale_short\": \"指标主体明确且无歧义，'CONSUMER_CONFIDENCE' 是国际通用标准命名，无需添加 '_INDEX' 后缀；来源 NBS 可在元数据中体现，不纳入 indicator_id\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "CONSUMER_CONFIDENCE",
     "round2_alternatives": [
-      "CC_INDEX",
+      "CONSUMER_CONFIDENCE_INDEX",
       "CHN_CONSUMER_CONFIDENCE"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"CONSUMER_CONFIDENCE\",\n  \"alternative_indicator_ids\": [\"CC_INDEX\", \"CHN_CONSUMER_CONFIDENCE\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"CONSUMER_CONFIDENCE\",\n  \"alternative_indicator_ids\": [\n    \"CONSUMER_CONFIDENCE_INDEX\",\n    \"CHN_CONSUMER_CONFIDENCE\"\n  ],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "CONSUMER_CONFIDENCE",
     "final_confidence": "high",
@@ -234,18 +232,18 @@
     "remark": "",
     "round1_indicator_id": "INFRA_INVEST_CUM_YOY",
     "round1_alternatives": [
-      "INFRASTRUCTURE_INVESTMENT_CUMULATIVE_YOY",
+      "INFRASTRUCTURE_INVESTMENT_CUM_YOY",
       "INFRA_INV_CUM_YOY"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"INFRA_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"INFRASTRUCTURE_INVESTMENT_CUMULATIVE_YOY\", \"INFRA_INV_CUM_YOY\"],\n  \"display_name_cn\": \"基础设施投资:累计同比\",\n  \"naming_rationale_short\": \"Uses standard financial abbreviation pattern: sector (INFRA) + data type (INVEST) + aggregation method (CUM) + comparison period (YOY). Matches NBS convention and is concise for modeling use.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"INFRA_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"INFRASTRUCTURE_INVESTMENT_CUM_YOY\", \"INFRA_INV_CUM_YOY\"],\n  \"display_name_cn\": \"基础设施投资累计同比\",\n  \"naming_rationale_short\": \"采用原始代码 INFRA_INVEST_CUM_YOY，符合金融命名习惯：主体（INFRA_INVEST）+ 调整方式（CUM_YOY），简洁且语义清晰，token数为3，适合结构化数据与模型输入。\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "INFRA_INVEST_CUM_YOY",
     "round2_alternatives": [
       "INFRASTRUCTURE_INVESTMENT_CUM_YOY",
       "INFRA_INV_CUM_YOY"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"INFRA_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"INFRASTRUCTURE_INVESTMENT_CUM_YOY\", \"INFRA_INV_CUM_YOY\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"INFRA_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\n    \"INFRASTRUCTURE_INVESTMENT_CUM_YOY\",\n    \"INFRA_INV_CUM_YOY\"\n  ],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "INFRA_INVEST_CUM_YOY",
     "final_confidence": "high",
@@ -263,21 +261,21 @@
     "round1_indicator_id": "MANUFACTURING_INVEST_CUM_YOY",
     "round1_alternatives": [
       "MANU_INVEST_CUM_YOY",
-      "FAI_MANU_CUM_YOY"
+      "INDUSTRY_INVEST_CUM_YOY"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"MANUFACTURING_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"MANU_INVEST_CUM_YOY\", \"FAI_MANU_CUM_YOY\"],\n  \"display_name_cn\": \"制造业投资:累计同比\",\n  \"naming_rationale_short\": \"Uses standard 'MANUFACTURING_INVEST' for clarity and 'CUM_YOY' to explicitly denote cumulative year-on-year growth, consistent with financial data conventions.\",\n  \"confidence\": \"high\"\n}",
-    "round2_indicator_id": "MANUFACTURING_INVEST_CUM_YOY",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"MANUFACTURING_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\n    \"MANU_INVEST_CUM_YOY\",\n    \"INDUSTRY_INVEST_CUM_YOY\"\n  ],\n  \"display_name_cn\": \"制造业投资累计同比\",\n  \"naming_rationale_short\": \"原始代码已符合命名规范：主体（制造业投资）+ 调整方式（累计同比），语义清晰且结构简洁，无需修改。\",\n  \"confidence\": \"high\"\n}",
+    "round2_indicator_id": "MANU_INVEST_CUM_YOY",
     "round2_alternatives": [
-      "MANU_INVESTMENT_CUM_YOY",
-      "FAI_MANU_CUM_YOY"
+      "MANUFACTURING_INVEST_CUM_YOY",
+      "INDUSTRY_INVEST_CUM_YOY"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"MANUFACTURING_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"MANU_INVESTMENT_CUM_YOY\", \"FAI_MANU_CUM_YOY\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"MANU_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"MANUFACTURING_INVEST_CUM_YOY\", \"INDUSTRY_INVEST_CUM_YOY\"],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
-    "final_indicator_id": "MANUFACTURING_INVEST_CUM_YOY",
+    "final_indicator_id": "MANU_INVEST_CUM_YOY",
     "final_confidence": "high",
-    "notes": ""
+    "notes": "Abbrev-equiv: R1=MANUFACTURING_INVEST_CUM_YOY, R2=MANU_INVEST_CUM_YOY"
   },
   {
     "raw_indicator_code": "REAL_ESTATE_INVEST_CUM_YOY",
@@ -290,18 +288,18 @@
     "remark": "",
     "round1_indicator_id": "REAL_ESTATE_INVEST_CUM_YOY",
     "round1_alternatives": [
-      "RE_INVEST_CUM_YOY",
-      "FIXED_ASSET_INVEST_RE_CUM_YOY"
+      "REAL_ESTATE_INVESTMENT_CUM_YOY",
+      "PROPERTY_INVEST_CUM_YOY"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"REAL_ESTATE_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"RE_INVEST_CUM_YOY\", \"FIXED_ASSET_INVEST_RE_CUM_YOY\"],\n  \"display_name_cn\": \"房地产开发投资完成额:累计同比\",\n  \"naming_rationale_short\": \"Uses clear prefix for real estate investment with '_CUM_YOY' to denote cumulative year-on-year growth; consistent with NBS terminology and financial data conventions.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"REAL_ESTATE_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\n    \"REAL_ESTATE_INVESTMENT_CUM_YOY\",\n    \"PROPERTY_INVEST_CUM_YOY\"\n  ],\n  \"display_name_cn\": \"房地产开发投资完成额:累计同比\",\n  \"naming_rationale_short\": \"原始代码已符合命名规范，语义清晰，包含主体（REAL_ESTATE_INVEST）、统计方式（CUM）和调整类型（YOY），且为NBS官方常用表述。\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "REAL_ESTATE_INVEST_CUM_YOY",
     "round2_alternatives": [
-      "RE_INVEST_CUM_YOY",
-      "REAL_ESTATE_INV_CUM_YOY"
+      "REAL_ESTATE_DEV_INVEST_CUM_YOY",
+      "REAL_ESTATE_CONSTRUCTION_INVEST_CUM_YOY"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"REAL_ESTATE_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\"RE_INVEST_CUM_YOY\", \"REAL_ESTATE_INV_CUM_YOY\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"REAL_ESTATE_INVEST_CUM_YOY\",\n  \"alternative_indicator_ids\": [\n    \"REAL_ESTATE_DEV_INVEST_CUM_YOY\",\n    \"REAL_ESTATE_CONSTRUCTION_INVEST_CUM_YOY\"\n  ],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "REAL_ESTATE_INVEST_CUM_YOY",
     "final_confidence": "high",
@@ -318,18 +316,18 @@
     "remark": "",
     "round1_indicator_id": "PMI_NEW_EXPORT_ORDERS",
     "round1_alternatives": [
-      "CHN_PMI_NEW_EXPORT_ORDERS",
-      "PMI_NEO"
+      "PMI_NEO",
+      "PMI_EXPORT_ORDERS"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"PMI_NEW_EXPORT_ORDERS\",\n  \"alternative_indicator_ids\": [\"CHN_PMI_NEW_EXPORT_ORDERS\", \"PMI_NEO\"],\n  \"display_name_cn\": \"中国: PMI: 新出口订单\",\n  \"naming_rationale_short\": \"Uses standard financial abbreviation 'PMI' and descriptive 'NEW_EXPORT_ORDERS'; source clarity via context; 'Level' adjustment means no YoY suffix needed.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"PMI_NEW_EXPORT_ORDERS\",\n  \"alternative_indicator_ids\": [\"PMI_NEO\", \"PMI_EXPORT_ORDERS\"],\n  \"display_name_cn\": \"中国PMI新出口订单\",\n  \"naming_rationale_short\": \"采用原始代码命名，符合金融惯例，语义清晰且已包含主体（PMI）与细分项（新出口订单），无需额外调整后缀\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "PMI_NEW_EXPORT_ORDERS",
     "round2_alternatives": [
       "PMI_NEO",
-      "NEW_EXPORT_ORDERS_PMI"
+      "PMI_EXPORT_ORDERS"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"PMI_NEW_EXPORT_ORDERS\",\n  \"alternative_indicator_ids\": [\"PMI_NEO\", \"NEW_EXPORT_ORDERS_PMI\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"PMI_NEW_EXPORT_ORDERS\",\n  \"alternative_indicator_ids\": [\"PMI_NEO\", \"PMI_EXPORT_ORDERS\"],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "PMI_NEW_EXPORT_ORDERS",
     "final_confidence": "high",
@@ -344,24 +342,23 @@
     "source": "GACC",
     "data_type": "Trade",
     "remark": "",
-    "round1_indicator_id": "CHN_EXPORT_AMOUNT_YOY",
+    "round1_indicator_id": "EXPORT_AMOUNT_YOY",
     "round1_alternatives": [
-      "EXPORT_AMOUNT_CHN_YOY",
-      "CHINA_EXPORT_YOY"
+      "CHN_EXPORT_AMOUNT_YOY"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"CHN_EXPORT_AMOUNT_YOY\",\n  \"alternative_indicator_ids\": [\"EXPORT_AMOUNT_CHN_YOY\", \"CHINA_EXPORT_YOY\"],\n  \"display_name_cn\": \"中国:出口金额:同比\",\n  \"naming_rationale_short\": \"Uses standard country code 'CHN', clear indicator 'EXPORT_AMOUNT', and adjustment type 'YOY'. Follows financial data convention for macro indicators.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"EXPORT_AMOUNT_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_EXPORT_AMOUNT_YOY\"],\n  \"display_name_cn\": \"中国出口金额同比\",\n  \"naming_rationale_short\": \"原始代码已符合命名规范，语义清晰，主体为出口金额，调整方式为同比，无需冗余前缀或单位\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "EXPORT_AMOUNT_YOY",
     "round2_alternatives": [
-      "CHN_EXPORT_AMT_YOY",
-      "EXPORT_VALUE_YOY"
+      "CHN_EXPORT_AMOUNT_YOY",
+      "EXPORT_YOY"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"EXPORT_AMOUNT_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_EXPORT_AMT_YOY\", \"EXPORT_VALUE_YOY\"],\n  \"confidence\": \"high\"\n}",
-    "consistency": "medium",
-    "final_indicator_id": "CHN_EXPORT_AMOUNT_YOY",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"EXPORT_AMOUNT_YOY\",\n  \"alternative_indicator_ids\": [\n    \"CHN_EXPORT_AMOUNT_YOY\",\n    \"EXPORT_YOY\"\n  ],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
+    "final_indicator_id": "EXPORT_AMOUNT_YOY",
     "final_confidence": "high",
-    "notes": "R1=CHN_EXPORT_AMOUNT_YOY, R2=EXPORT_AMOUNT_YOY"
+    "notes": ""
   },
   {
     "raw_indicator_code": "IMPORT_AMOUNT_YOY",
@@ -372,24 +369,23 @@
     "source": "GACC",
     "data_type": "Trade",
     "remark": "",
-    "round1_indicator_id": "IMPORT_AMOUNT_CNY_YOY",
+    "round1_indicator_id": "IMPORT_AMOUNT_YOY",
     "round1_alternatives": [
-      "CHN_IMPORT_AMT_YOY",
-      "IMPORTS_CNY_YOY"
+      "CHN_IMPORT_AMOUNT_YOY"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"IMPORT_AMOUNT_CNY_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_IMPORT_AMT_YOY\", \"IMPORTS_CNY_YOY\"],\n  \"display_name_cn\": \"中国进口金额同比\",\n  \"naming_rationale_short\": \"Uses 'IMPORT_AMOUNT_CNY_YOY' to clearly indicate Chinese imports in yuan terms with year-on-year growth; 'CNY' is more precise than country code alone and aligns with financial data conventions.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"IMPORT_AMOUNT_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_IMPORT_AMOUNT_YOY\"],\n  \"display_name_cn\": \"中国进口金额同比\",\n  \"naming_rationale_short\": \"采用原始代码IMPORT_AMOUNT_YOY，语义清晰且符合金融命名惯例，CHN前缀可选用于多国场景区分\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "IMPORT_AMOUNT_YOY",
     "round2_alternatives": [
-      "CHN_IMPORT_AMT_YOY",
-      "IMPORT_VALUE_YOY"
+      "CHN_IMPORT_AMOUNT_YOY",
+      "IMPORT_AMOUNT_CNY_YOY"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"IMPORT_AMOUNT_YOY\",\n  \"alternative_indicator_ids\": [\"CHN_IMPORT_AMT_YOY\", \"IMPORT_VALUE_YOY\"],\n  \"confidence\": \"high\"\n}",
-    "consistency": "medium",
-    "final_indicator_id": "IMPORT_AMOUNT_CNY_YOY",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"IMPORT_AMOUNT_YOY\",\n  \"alternative_indicator_ids\": [\n    \"CHN_IMPORT_AMOUNT_YOY\",\n    \"IMPORT_AMOUNT_CNY_YOY\"\n  ],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
+    "final_indicator_id": "IMPORT_AMOUNT_YOY",
     "final_confidence": "high",
-    "notes": "R1=IMPORT_AMOUNT_CNY_YOY, R2=IMPORT_AMOUNT_YOY"
+    "notes": ""
   },
   {
     "raw_indicator_code": "SPECIAL_BOND_ISSUE_CUM",
@@ -402,18 +398,18 @@
     "remark": "",
     "round1_indicator_id": "SPECIAL_BOND_ISSUE_CUM",
     "round1_alternatives": [
-      "SPECIAL_BOND_ISSUANCE_CUM",
-      "LOCAL_GOVT_SPECIAL_BOND_CUM"
+      "LOCAL_SPECIAL_BOND_CUM",
+      "SPECIAL_BOND_CUM"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"SPECIAL_BOND_ISSUE_CUM\",\n  \"alternative_indicator_ids\": [\"SPECIAL_BOND_ISSUANCE_CUM\", \"LOCAL_GOVT_SPECIAL_BOND_CUM\"],\n  \"display_name_cn\": \"新增专项债券:累计值\",\n  \"naming_rationale_short\": \"Uses standard financial abbreviation 'SPECIAL_BOND' for China's local government special bonds; '_CUM' suffix clearly denotes cumulative value as per data adjustment type; matches MOF source nomenclature and market convention.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"SPECIAL_BOND_ISSUE_CUM\",\n  \"alternative_indicator_ids\": [\"LOCAL_SPECIAL_BOND_CUM\", \"SPECIAL_BOND_CUM\"],\n  \"display_name_cn\": \"新增专项债券:累计值\",\n  \"naming_rationale_short\": \"原始代码已清晰表达主体与累计属性，符合财政领域命名习惯，无需调整\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "SPECIAL_BOND_ISSUE_CUM",
     "round2_alternatives": [
-      "SPECIAL_BOND_CUM",
-      "ADV_BOND_ISSUE_CUM"
+      "LOCAL_SPECIAL_BOND_ISSUE_CUM",
+      "SPECIAL_BOND_ISSUANCE_CUM"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"SPECIAL_BOND_ISSUE_CUM\",\n  \"alternative_indicator_ids\": [\"SPECIAL_BOND_CUM\", \"ADV_BOND_ISSUE_CUM\"],\n  \"confidence\": \"high\"\n}",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"SPECIAL_BOND_ISSUE_CUM\",\n  \"alternative_indicator_ids\": [\n    \"LOCAL_SPECIAL_BOND_ISSUE_CUM\",\n    \"SPECIAL_BOND_ISSUANCE_CUM\"\n  ],\n  \"confidence\": \"high\"\n}",
     "consistency": "high",
     "final_indicator_id": "SPECIAL_BOND_ISSUE_CUM",
     "final_confidence": "high",
@@ -428,23 +424,23 @@
     "source": "MOF",
     "data_type": "Fiscal",
     "remark": "",
-    "round1_indicator_id": "LOCAL_SPECIAL_BOND_TARGET",
+    "round1_indicator_id": "LOCAL_SPECIAL_BOND_TARGET_ANNUAL",
     "round1_alternatives": [
-      "LSB_TARGET",
-      "LOCAL_SPECIAL_BOND_ANNUAL_TARGET"
+      "LOCAL_SPECIAL_BOND_ANNUAL_TARGET",
+      "SPECIAL_LOCAL_BOND_TARGET_ANNUAL"
     ],
     "round1_confidence": "high",
-    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"LOCAL_SPECIAL_BOND_TARGET\",\n  \"alternative_indicator_ids\": [\"LSB_TARGET\", \"LOCAL_SPECIAL_BOND_ANNUAL_TARGET\"],\n  \"display_name_cn\": \"地方政府专项债券年度目标\",\n  \"naming_rationale_short\": \"Based on standard financial naming, 'LOCAL_SPECIAL_BOND_TARGET' clearly reflects the indicator's meaning without redundancy; 'ANNUAL' is implied by policy context and data frequency, so it's omitted for conciseness.\",\n  \"confidence\": \"high\"\n}",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"LOCAL_SPECIAL_BOND_TARGET_ANNUAL\",\n  \"alternative_indicator_ids\": [\"LOCAL_SPECIAL_BOND_ANNUAL_TARGET\", \"SPECIAL_LOCAL_BOND_TARGET_ANNUAL\"],\n  \"display_name_cn\": \"地方专项债年度目标\",\n  \"naming_rationale_short\": \"原始代码已符合命名规范，语义清晰：主体（地方专项债）+ 调整（年度目标），且与财政政策常用表述一致\",\n  \"confidence\": \"high\"\n}",
     "round2_indicator_id": "LOCAL_SPECIAL_BOND_TARGET_ANNUAL",
     "round2_alternatives": [
-      "LOCAL_SPCL_BND_TGT_A",
-      "LSB_TARGET_ANNUAL"
+      "LOCAL_SPECIAL_BOND_ANNUAL_TARGET",
+      "SPECIAL_LOCAL_BOND_TARGET"
     ],
     "round2_confidence": "high",
-    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"LOCAL_SPECIAL_BOND_TARGET_ANNUAL\",\n  \"alternative_indicator_ids\": [\"LOCAL_SPCL_BND_TGT_A\", \"LSB_TARGET_ANNUAL\"],\n  \"confidence\": \"high\"\n}",
-    "consistency": "medium",
-    "final_indicator_id": "LOCAL_SPECIAL_BOND_TARGET",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"LOCAL_SPECIAL_BOND_TARGET_ANNUAL\",\n  \"alternative_indicator_ids\": [\n    \"LOCAL_SPECIAL_BOND_ANNUAL_TARGET\",\n    \"SPECIAL_LOCAL_BOND_TARGET\"\n  ],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
+    "final_indicator_id": "LOCAL_SPECIAL_BOND_TARGET_ANNUAL",
     "final_confidence": "high",
-    "notes": "R1=LOCAL_SPECIAL_BOND_TARGET, R2=LOCAL_SPECIAL_BOND_TARGET_ANNUAL"
+    "notes": ""
   }
 ]

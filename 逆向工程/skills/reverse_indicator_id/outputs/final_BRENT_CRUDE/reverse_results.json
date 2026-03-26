@@ -1,0 +1,30 @@
+[
+  {
+    "raw_indicator_code": "BRENT_CRUDE",
+    "current_meaning": "期货收盘价(连续):ICE布油",
+    "indicator_name": "期货收盘价(连续):ICE布油",
+    "unit": "USD/bbl",
+    "adjustment": "Level",
+    "source": "ICE",
+    "data_type": "Inflation",
+    "remark": "由日度转月度",
+    "round1_indicator_id": "BRENT_CRUDE",
+    "round1_alternatives": [
+      "ICE_BRENT",
+      "BRENT_CRUDE_CLOSE"
+    ],
+    "round1_confidence": "high",
+    "round1_raw_response": "{\n  \"recommended_indicator_id\": \"BRENT_CRUDE\",\n  \"alternative_indicator_ids\": [\"ICE_BRENT\", \"BRENT_CRUDE_CLOSE\"],\n  \"display_name_cn\": \"ICE布油期货收盘价\",\n  \"naming_rationale_short\": \"BRENT_CRUDE 是市场通用缩写，语义清晰且广泛认可，无需添加频率或价格类型后缀。\",\n  \"confidence\": \"high\"\n}",
+    "round2_indicator_id": "BRENT_CRUDE",
+    "round2_alternatives": [
+      "BRENT_CRUDE_FUTURES",
+      "BRENT_OIL_PRICE"
+    ],
+    "round2_confidence": "high",
+    "round2_raw_response": "{\n  \"recommended_indicator_id\": \"BRENT_CRUDE\",\n  \"alternative_indicator_ids\": [\"BRENT_CRUDE_FUTURES\", \"BRENT_OIL_PRICE\"],\n  \"confidence\": \"high\"\n}",
+    "consistency": "high",
+    "final_indicator_id": "BRENT_CRUDE",
+    "final_confidence": "high",
+    "notes": ""
+  }
+]

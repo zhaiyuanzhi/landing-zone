@@ -2,10 +2,32 @@
 
 from schemas import RoundResult
 
+# Common financial abbreviation equivalences.
+# Each group maps to a canonical form for comparison purposes.
+ABBREV_EQUIV = {
+    "MANU": "MANUFACTURING",
+    "INFRA": "INFRASTRUCTURE",
+    "INVEST": "INVESTMENT",
+    "GOV": "GOVERNMENT",
+    "CUM": "CUMULATIVE",
+    "YTM": "YIELD",
+}
+
+
+def _canonicalize_token(token: str) -> str:
+    """Map known abbreviation to canonical form."""
+    return ABBREV_EQUIV.get(token, token)
+
 
 def normalize(s: str) -> str:
     """Normalize indicator ID for comparison."""
     return s.strip().upper().replace("-", "_").replace(" ", "_")
+
+
+def _canon_id(s: str) -> str:
+    """Normalize + canonicalize all tokens for equivalence comparison."""
+    tokens = normalize(s).split("_")
+    return "_".join(_canonicalize_token(t) for t in tokens)
 
 
 def compare_rounds(r1: RoundResult, r2: RoundResult) -> tuple[str, str, str]:
@@ -28,6 +50,29 @@ def compare_rounds(r1: RoundResult, r2: RoundResult) -> tuple[str, str, str]:
     # Exact match
     if id1 == id2:
         return "high", r1.recommended_indicator_id, ""
+
+    # Canonicalized match (abbreviation equivalence, e.g. MANU == MANUFACTURING)
+    canon1 = _canon_id(r1.recommended_indicator_id)
+    canon2 = _canon_id(r2.recommended_indicator_id)
+    if canon1 == canon2:
+        # Semantically identical — treat as high, pick shorter form
+        final = _pick_better(r1, r2)
+        return "high", final, f"Abbrev-equiv: R1={r1.recommended_indicator_id}, R2={r2.recommended_indicator_id}"
+
+    # Check if one is the other plus optional modifier tokens (e.g. CGB_3Y vs CGB_YTM_3Y)
+    # These are semantically equivalent — the extra token is implicit in context
+    ctokens1 = set(canon1.split("_"))
+    ctokens2 = set(canon2.split("_"))
+    diff = ctokens1.symmetric_difference(ctokens2)
+    if len(diff) <= 1 and len(ctokens1 & ctokens2) >= 2:
+        # Only 1 token different and they share core meaning
+        optional_modifiers = {"YIELD", "INDEX", "RATE", "PRICE", "FUTURES", "CLOSE", "SETTLE"}
+        if diff.issubset(optional_modifiers):
+            final = _pick_better(r1, r2)
+            return "high", final, (
+                f"Near-equiv (optional modifier): "
+                f"R1={r1.recommended_indicator_id}, R2={r2.recommended_indicator_id}"
+            )
 
     # Check semantic similarity: split into tokens and compare overlap
     tokens1 = set(id1.split("_"))

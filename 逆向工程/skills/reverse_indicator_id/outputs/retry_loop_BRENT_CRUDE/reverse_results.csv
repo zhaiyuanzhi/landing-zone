@@ -1,0 +1,2 @@
+raw_indicator_code,current_meaning,unit,adjustment,source,data_type,round1_indicator_id,round2_indicator_id,consistency,final_indicator_id,final_confidence,notes
+BRENT_CRUDE,期货收盘价(连续):ICE布油,USD/bbl,Level,ICE,Inflation,BRENT_CRUDE_PRICE,BRENT_CRUDE_FUTURE_PRICE,medium,BRENT_CRUDE_PRICE,high,"R1=BRENT_CRUDE_PRICE, R2=BRENT_CRUDE_FUTURE_PRICE"

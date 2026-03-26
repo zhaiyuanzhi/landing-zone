@@ -1,0 +1,2 @@
+raw_indicator_code,current_meaning,unit,adjustment,source,data_type,round1_indicator_id,round2_indicator_id,consistency,final_indicator_id,final_confidence,notes
+MANUFACTURING_INVEST_CUM_YOY,制造业投资:累计同比,%,YoY,NBS,Investment,MANUFACTURING_INVEST_CUM_YOY,MANUFACTURING_INVEST_CUM_YOY,high,MANUFACTURING_INVEST_CUM_YOY,high,
