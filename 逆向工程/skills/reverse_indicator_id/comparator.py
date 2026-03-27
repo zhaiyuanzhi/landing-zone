@@ -10,7 +10,23 @@ ABBREV_EQUIV = {
     "INVEST": "INVESTMENT",
     "GOV": "GOVERNMENT",
     "CUM": "CUMULATIVE",
-    "YTM": "YIELD",
+}
+
+# Core semantic tokens are more important than generic modifiers when comparing IDs.
+GENERIC_MODIFIERS = {
+    "YOY",
+    "MOM",
+    "CUM",
+    "CUMULATIVE",
+    "MONTHLY",
+    "ANNUAL",
+    "TARGET",
+    "PROGRESS",
+    "VALUE",
+    "AMOUNT",
+    "INDEX",
+    "LEVEL",
+    "RETURN",
 }
 
 
@@ -30,6 +46,42 @@ def _canon_id(s: str) -> str:
     return "_".join(_canonicalize_token(t) for t in tokens)
 
 
+def _tokenize(s: str) -> list[str]:
+    """Normalize and split an indicator ID into non-empty tokens."""
+    return [t for t in normalize(s).split("_") if t]
+
+
+def _core_tokens(tokens: list[str]) -> set[str]:
+    """Return semantically important tokens, excluding generic modifiers."""
+    return {t for t in tokens if t not in GENERIC_MODIFIERS}
+
+
+def _has_same_core_meaning(tokens1: list[str], tokens2: list[str]) -> bool:
+    """Check whether two IDs share the same core semantic subject."""
+    core1 = _core_tokens(tokens1)
+    core2 = _core_tokens(tokens2)
+
+    if not core1 or not core2:
+        return False
+
+    if core1 == core2:
+        return True
+
+    # Allow abbreviation-equivalent forms in core tokens.
+    canon_core1 = {_canonicalize_token(t) for t in core1}
+    canon_core2 = {_canonicalize_token(t) for t in core2}
+    return canon_core1 == canon_core2
+
+
+def _score_indicator_id(indicator_id: str) -> tuple[int, int, int]:
+    """Score an indicator ID for semantic completeness and naming cleanliness."""
+    tokens = _tokenize(indicator_id)
+    core_count = len(_core_tokens(tokens))
+    token_count = len(tokens)
+    length = len(indicator_id)
+    return (core_count, token_count, -length)
+
+
 def compare_rounds(r1: RoundResult, r2: RoundResult) -> tuple[str, str, str]:
     """
     Compare two round results.
@@ -45,51 +97,37 @@ def compare_rounds(r1: RoundResult, r2: RoundResult) -> tuple[str, str, str]:
 
     if not id1 or not id2:
         chosen = id1 or id2
-        return "low", chosen, "One round returned empty result"
+        return "low", chosen, "One round returned empty result; needs manual review"
+
+    tokens1 = _tokenize(r1.recommended_indicator_id)
+    tokens2 = _tokenize(r2.recommended_indicator_id)
 
     # Exact match
     if id1 == id2:
-        return "high", r1.recommended_indicator_id, ""
+        return "high", _pick_better(r1, r2), ""
 
-    # Canonicalized match (abbreviation equivalence, e.g. MANU == MANUFACTURING)
+    # Canonicalized exact match (strict abbreviation equivalence only)
     canon1 = _canon_id(r1.recommended_indicator_id)
     canon2 = _canon_id(r2.recommended_indicator_id)
     if canon1 == canon2:
-        # Semantically identical — treat as high, pick shorter form
         final = _pick_better(r1, r2)
-        return "high", final, f"Abbrev-equiv: R1={r1.recommended_indicator_id}, R2={r2.recommended_indicator_id}"
+        return "high", final, (
+            f"Abbrev-equiv: R1={r1.recommended_indicator_id}, "
+            f"R2={r2.recommended_indicator_id}"
+        )
 
-    # Check if one is the other plus optional modifier tokens (e.g. CGB_3Y vs CGB_YTM_3Y)
-    # These are semantically equivalent — the extra token is implicit in context
-    ctokens1 = set(canon1.split("_"))
-    ctokens2 = set(canon2.split("_"))
-    diff = ctokens1.symmetric_difference(ctokens2)
-    if len(diff) <= 1 and len(ctokens1 & ctokens2) >= 2:
-        # Only 1 token different and they share core meaning
-        optional_modifiers = {"YIELD", "INDEX", "RATE", "PRICE", "FUTURES", "CLOSE", "SETTLE"}
-        if diff.issubset(optional_modifiers):
-            final = _pick_better(r1, r2)
-            return "high", final, (
-                f"Near-equiv (optional modifier): "
-                f"R1={r1.recommended_indicator_id}, R2={r2.recommended_indicator_id}"
-            )
+    # Compare semantic similarity, but require the same core subject.
+    token_set1 = set(tokens1)
+    token_set2 = set(tokens2)
 
-    # Check semantic similarity: split into tokens and compare overlap
-    tokens1 = set(id1.split("_"))
-    tokens2 = set(id2.split("_"))
+    if not token_set1 or not token_set2:
+        return "low", "", "One round returned no valid tokens; needs manual review"
 
-    if not tokens1 or not tokens2:
-        return "low", r1.recommended_indicator_id, f"Round2 gave: {r2.recommended_indicator_id}"
-
-    overlap = tokens1 & tokens2
-    union = tokens1 | tokens2
+    overlap = token_set1 & token_set2
+    union = token_set1 | token_set2
     jaccard = len(overlap) / len(union)
 
-    # Also check if one is substring of the other
-    is_substring = id1 in id2 or id2 in id1
-
-    if jaccard >= 0.6 or is_substring:
-        # Medium consistency - pick the better one
+    if _has_same_core_meaning(tokens1, tokens2) and jaccard >= 0.6:
         final = _pick_better(r1, r2)
         return (
             "medium",
@@ -97,7 +135,7 @@ def compare_rounds(r1: RoundResult, r2: RoundResult) -> tuple[str, str, str]:
             f"R1={r1.recommended_indicator_id}, R2={r2.recommended_indicator_id}",
         )
 
-    # Check if round2 result appears in round1 alternatives or vice versa
+    # Check if round2 result appears in round1 alternatives or vice versa.
     r1_alts_norm = [normalize(a) for a in r1.alternative_indicator_ids]
     r2_alts_norm = [normalize(a) for a in r2.alternative_indicator_ids]
 
@@ -110,10 +148,11 @@ def compare_rounds(r1: RoundResult, r2: RoundResult) -> tuple[str, str, str]:
             f"R2={r2.recommended_indicator_id}",
         )
 
-    # Low consistency
+    # Low consistency: keep a candidate for inspection, but flag manual review clearly.
+    final = _pick_better(r1, r2)
     return (
         "low",
-        r1.recommended_indicator_id,
+        final,
         f"Divergent. R1={r1.recommended_indicator_id}, R2={r2.recommended_indicator_id}. "
         "Needs manual review.",
     )
@@ -124,11 +163,6 @@ def _pick_better(r1: RoundResult, r2: RoundResult) -> str:
     id1 = r1.recommended_indicator_id
     id2 = r2.recommended_indicator_id
 
-    # Prefer shorter, cleaner names (less over-specified)
-    # But not too short (must be meaningful)
-    len1, len2 = len(id1), len(id2)
-
-    # Prefer the one with higher confidence
     conf_rank = {"high": 3, "medium": 2, "low": 1, "": 0}
     c1 = conf_rank.get(r1.confidence.lower(), 0)
     c2 = conf_rank.get(r2.confidence.lower(), 0)
@@ -138,9 +172,16 @@ def _pick_better(r1: RoundResult, r2: RoundResult) -> str:
     if c2 > c1:
         return id2
 
-    # Same confidence: prefer round1 (primary) unless round2 is notably cleaner
-    if len2 < len1 * 0.7:
-        return id2  # Round2 is significantly more concise
+    # Same confidence: prefer the semantically fuller and cleaner name.
+    score1 = _score_indicator_id(id1)
+    score2 = _score_indicator_id(id2)
+
+    if score1 > score2:
+        return id1
+    if score2 > score1:
+        return id2
+
+    # Final fallback: prefer round1 as the primary proposal.
     return id1
 
 
@@ -152,10 +193,20 @@ def compute_final_confidence(
 
     c1 = conf_rank.get(r1.confidence.lower(), 0)
     c2 = conf_rank.get(r2.confidence.lower(), 0)
-    cons = conf_rank.get(consistency, 0)
 
-    avg = (c1 + c2 + cons) / 3
+    # Consistency should dominate final confidence in this workflow.
+    if consistency == "low":
+        if c1 >= 3 and c2 >= 3:
+            return "medium"
+        return "low"
 
+    if consistency == "high":
+        if c1 >= 2 and c2 >= 2:
+            return "high"
+        return "medium"
+
+    # consistency == "medium"
+    avg = (c1 + c2) / 2
     if avg >= 2.5:
         return "high"
     if avg >= 1.5:
