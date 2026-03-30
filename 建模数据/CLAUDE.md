@@ -29,19 +29,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 建模月频序列.csv  (10 indicators, month-end values, 2002-01~)
         │
-        ├─→ cgb_rate_analysis.py  → cgb_summary_metrics.csv + term_spread_quarterly_view.csv
+        ├─→ cgb_rate_analysis.py       → cgb_summary_metrics.csv（季末利率与期限利差）
         │
-        └─→ plan_a_modeling.py    → plan_a_returns.csv (4-leg monthly returns)
-                                  → plan_a_windows/{corr,cov,sigma,mu}_{W}M.csv
+        ├─→ plan_a_modeling.py         → plan_a_returns.csv（4腿月收益率）
+        │                              → plan_a_windows/{corr,cov,sigma,mu}_{W}M.csv
+        │
+        └─→ asset_benchmark_profile.py → asset_benchmark_profile.csv（4资产基准画像）
+              ↑ 读取 plan_a_returns.csv + 建模月频序列.csv 的 CGB_1Y
 ```
 
 ## Commands
 
 ```bash
-# 从项目根目录运行
-python3 建模数据/plan_a_modeling.py        # 方案A全量：月收益 + 6窗口统计
-python3 建模数据/cgb_rate_analysis.py      # 无风险利率汇总 + 期限利差
-python3 建模数据/demo_modeling_data.py     # Choice导出格式解析demo
+# 从项目根目录运行（有依赖顺序：先 plan_a_modeling → 再 asset_benchmark_profile）
+python3 建模数据/plan_a_modeling.py            # 方案A全量：月收益 + 6窗口统计
+python3 建模数据/cgb_rate_analysis.py          # 国债收益率季末序列 + 期限利差
+python3 建模数据/asset_benchmark_profile.py    # 4资产基准画像（年化收益/波动率/Sharpe）
+python3 建模数据/demo_modeling_data.py         # Choice导出格式解析demo
 ```
 
 ## Key Rules
@@ -56,11 +60,11 @@ python3 建模数据/demo_modeling_data.py     # Choice导出格式解析demo
 
 ## Output Structure
 
-- `plan_a_returns.csv` — 4 列月收益率时间序列
+- `plan_a_returns.csv` — 4 列月收益率时间序列（r_cash / r_bond / r_equity / r_alt）
 - `plan_a_corr_mu.csv` — 各窗口相关性与预期收益（long format）
 - `plan_a_windows/` — 每窗口 4 个文件：`corr_WM.csv`, `cov_WM.csv`, `sigma_WM.csv`, `mu_WM.csv`
-- `cgb_summary_metrics.csv` — rf 与 long_rate 各窗口值（单行宽表）
-- `term_spread_quarterly_view.csv` — 10Y-1Y 期限利差季末序列（2024Q4 起）
+- `cgb_summary_metrics.csv` — 季末 CGB_1Y / CGB_10Y / term_spread 序列（2021Q1 起）
+- `asset_benchmark_profile.csv` — 4 资产 × {ann_return, ann_vol, sharpe_ratio} × {1Y, 3Y, 5Y}
 
 ## Database Target Schema (Planned)
 
