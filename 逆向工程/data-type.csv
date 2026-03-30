@@ -1,3 +1,4 @@
+# Growth（经济增长）
 indicator_id,indicator_name,unit,adjustment,source,data_type
 GDP_REAL_YOY,中国:GDP:不变价:当季同比,%,YoY,NBS,Growth
 INDUSTRY_YOY,工业增加值:同比,%,YoY,NBS,Growth
@@ -22,7 +23,7 @@ EXPORT_AMOUNT_CNY_YOY,中国:出口金额:同比,%,YoY,GACC,Trade
 IMPORT_AMOUNT_CNY_YOY,中国:进口金额:同比,%,YoY,GACC,Trade
 
 # FX（汇率）
-FX_CNY_MID,中间价:美元兑人民币,CNY/USD,Level,PBOC,FX
+FX_CNY_MID,中间价:美元兑人民币,USD/CNY,Level,PBOC,FX
 
 # Credit（货币与信用）
 M2_YOY,M2:同比,%,YoY,PBOC,Credit
@@ -33,7 +34,7 @@ TSF_STOCK_YOY,社融存量:同比,%,YoY,PBOC,Credit
 DR007,DR007,%,Level,CFETS,Rate
 CREDIT_YTM_AA_3Y,AA级信用债收益率（3年）,%,Level,CHINA_BOND,Rate
 CGB_3Y_YTM,中债国债到期收益率:3年,%,Level,CHINA_BOND,Rate
-LPR_1Y,LPR:1年期,%,Level,PBOC,Rate
+LPR_1Y,LPR:1年期,%,Level,CFETS,Rate
 
 # Labor（劳动力市场）
 URBAN_SURVEYED_UNEMPLOYMENT_RATE,城镇调查失业率,%,Level,NBS,Labor
