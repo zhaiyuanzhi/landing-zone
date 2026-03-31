@@ -1,0 +1,6 @@
+# 市场分析智能体评测 Pipeline 依赖
+anthropic>=0.50.0      # Claude API (评测器 & 优化器)
+openai>=1.50.0         # OpenAI 兼容接口 (Qwen3 智能体)
+pydantic>=2.0.0        # 结构化输出数据模型
+fastapi>=0.100.0       # 主服务依赖（market_context FastAPI 应用）
+uvicorn>=0.23.0        # FastAPI 运行时（可选，用于启动主服务）
