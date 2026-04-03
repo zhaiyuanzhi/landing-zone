@@ -1,14 +1,17 @@
 """
 提示词优化器
 
-使用 claude-opus-4-6 + 自适应思考，基于多测试用例的评测结果，
-针对性地修改系统提示词，重点提升得分最低的维度。
+支持多种后端模型（通过 eval_config.OPTIMIZER_CONFIG 切换）：
+  - Anthropic Claude（原生 SDK，支持 adaptive thinking）
+  - OpenAI 兼容接口：Qwen3-235B（支持 enable_thinking）、DeepSeek-R1、Doubao 等
+
+切换方法：修改 eval_config.py 中的 OPTIMIZER_CONFIG 字典。
 """
 
+import os
 import re
-import anthropic
 
-from eval_config import ANTHROPIC_API_KEY, OPTIMIZER_MODEL
+from eval_config import OPTIMIZER_CONFIG
 from eval_rubric import RUBRIC
 from evaluator import aggregate_eval_results
 
@@ -32,35 +35,30 @@ def optimize_prompt(
 
     Returns:
         {
-            "optimized_prompt":      str,  # 完整的新版提示词
-            "changes_summary":       str,  # 改动要点列表
-            "expected_improvements": str,  # 预期改善描述
+            "optimized_prompt":      str,
+            "changes_summary":       str,
+            "expected_improvements": str,
+            "raw_response":          str,
         }
     """
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-
     agg = aggregate_eval_results(eval_results)
-    eval_detail_str = _format_eval_detail(eval_results)
 
-    # 最差的 3 个维度
     worst_dims_str = "\n".join(
         f"  - {RUBRIC[d]['name']}: {s:.1f}/10（权重 {int(RUBRIC[d]['weight']*100)}%）"
         for d, s in agg.get("worst_dimensions", [])
     )
-
-    # 所有维度均分
     all_scores_str = "\n".join(
         f"  - {RUBRIC[d]['name']}: {s:.1f}/10"
         for d, s in agg.get("avg_scores", {}).items()
     )
 
-    optimizer_system = (
+    system_msg = (
         "你是一位顶级提示词工程师，专注于优化金融/市场分析 LLM 系统提示词。\n"
         "你深知：好的提示词能引导模型产生特定行为，而不是简单地堆砌要求。\n"
         "你的改动必须精准、可验证，每一处修改都能直接影响模型输出行为。"
     )
 
-    optimizer_user = f"""# 任务：优化市场分析智能体系统提示词（第 {iteration} 轮 → 第 {iteration + 1} 轮）
+    user_msg = f"""# 任务：优化市场分析智能体系统提示词（第 {iteration} 轮 → 第 {iteration + 1} 轮）
 
 ---
 
@@ -80,7 +78,7 @@ def optimize_prompt(
 {worst_dims_str}
 
 ### 详细评测反馈（含提示词缺陷分析）
-{eval_detail_str}
+{_format_eval_detail(eval_results)}
 
 ---
 
@@ -110,24 +108,70 @@ def optimize_prompt(
 </expected_improvements>
 """
 
-    response = client.messages.create(
-        model=OPTIMIZER_MODEL,
-        max_tokens=8192,
-        thinking={"type": "adaptive"},
-        system=optimizer_system,
-        messages=[{"role": "user", "content": optimizer_user}],
-    )
-
-    full_text = "".join(
-        b.text for b in response.content if b.type == "text"
-    )
+    provider = OPTIMIZER_CONFIG.get("provider", "anthropic")
+    if provider == "anthropic":
+        full_text = _call_anthropic(system_msg, user_msg)
+    else:
+        full_text = _call_openai_compat(system_msg, user_msg)
 
     return {
         "optimized_prompt":      _extract_tag(full_text, "optimized_prompt"),
         "changes_summary":       _extract_tag(full_text, "changes_summary"),
         "expected_improvements": _extract_tag(full_text, "expected_improvements"),
-        "raw_response":          full_text,  # 保留完整输出便于调试
+        "raw_response":          full_text,
     }
+
+
+# ============================================================
+# 后端调用
+# ============================================================
+
+def _call_anthropic(system_msg: str, user_msg: str) -> str:
+    """Anthropic 原生 SDK，支持 adaptive thinking。"""
+    import anthropic
+
+    api_key = os.environ.get(OPTIMIZER_CONFIG["api_key_env"], "")
+    client = anthropic.Anthropic(api_key=api_key)
+
+    kwargs: dict = {
+        "model":    OPTIMIZER_CONFIG["model"],
+        "max_tokens": OPTIMIZER_CONFIG.get("max_tokens", 8192),
+        "system":   system_msg,
+        "messages": [{"role": "user", "content": user_msg}],
+    }
+    if OPTIMIZER_CONFIG.get("enable_thinking"):
+        kwargs["thinking"] = {"type": "adaptive"}
+
+    response = client.messages.create(**kwargs)
+    return "".join(b.text for b in response.content if b.type == "text")
+
+
+def _call_openai_compat(system_msg: str, user_msg: str) -> str:
+    """OpenAI 兼容接口（Qwen3、DeepSeek、Doubao 等）。"""
+    from openai import OpenAI
+
+    api_key  = os.environ.get(OPTIMIZER_CONFIG["api_key_env"], "")
+    base_url = OPTIMIZER_CONFIG.get("base_url")
+    model    = OPTIMIZER_CONFIG["model"]
+    max_tok  = OPTIMIZER_CONFIG.get("max_tokens", 8192)
+
+    client = OpenAI(api_key=api_key, base_url=base_url)
+
+    create_kwargs: dict = {
+        "model":      model,
+        "max_tokens": max_tok,
+        "messages": [
+            {"role": "system", "content": system_msg},
+            {"role": "user",   "content": user_msg},
+        ],
+    }
+
+    # Qwen3：通过 extra_body 启用思维链
+    if OPTIMIZER_CONFIG.get("enable_thinking") and "qwen3" in model.lower():
+        create_kwargs["extra_body"] = {"enable_thinking": True}
+
+    resp = client.chat.completions.create(**create_kwargs)
+    return resp.choices[0].message.content or ""
 
 
 # ============================================================
@@ -135,14 +179,11 @@ def optimize_prompt(
 # ============================================================
 
 def _extract_tag(text: str, tag: str) -> str:
-    """提取 XML 标签内的内容，并去除首尾空白"""
-    pattern = rf"<{tag}>(.*?)</{tag}>"
-    match = re.search(pattern, text, re.DOTALL)
+    match = re.search(rf"<{tag}>(.*?)</{tag}>", text, re.DOTALL)
     return match.group(1).strip() if match else ""
 
 
 def _format_eval_detail(eval_results: list[dict]) -> str:
-    """将评测结果列表格式化为供 LLM 阅读的文本"""
     lines = []
     for i, r in enumerate(eval_results, 1):
         lines.append(f"### 测试用例 {i}")

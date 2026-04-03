@@ -25,13 +25,15 @@ from evaluator_oai import evaluate_with_oai_compat
 def _build_evaluator_fn(cfg: dict) -> Callable:
     """
     根据配置字典返回一个统一签名的评测函数：
-        fn(query, agent_response, system_prompt, iteration) -> dict
+        fn(query, agent_response, system_prompt, iteration, data_context) -> dict
     """
     provider = cfg["provider"]
     api_key  = os.environ.get(cfg["api_key_env"], "")
 
+    timeout = float(cfg.get("timeout", 180))
+
     if provider == "anthropic":
-        def _claude_fn(query, agent_response, system_prompt, iteration):
+        def _claude_fn(query, agent_response, system_prompt, iteration, data_context=""):
             return evaluate_with_claude(
                 query=query,
                 agent_response=agent_response,
@@ -39,6 +41,7 @@ def _build_evaluator_fn(cfg: dict) -> Callable:
                 iteration=iteration,
                 api_key=api_key,
                 model=cfg["model"],
+                data_context=data_context,
             )
         return _claude_fn
 
@@ -46,7 +49,7 @@ def _build_evaluator_fn(cfg: dict) -> Callable:
         use_json_mode = cfg.get("use_json_mode", True)
         base_url      = cfg["base_url"]
 
-        def _oai_fn(query, agent_response, system_prompt, iteration):
+        def _oai_fn(query, agent_response, system_prompt, iteration, data_context=""):
             return evaluate_with_oai_compat(
                 query=query,
                 agent_response=agent_response,
@@ -56,6 +59,8 @@ def _build_evaluator_fn(cfg: dict) -> Callable:
                 base_url=base_url,
                 model=cfg["model"],
                 use_json_mode=use_json_mode,
+                timeout=timeout,
+                data_context=data_context,
             )
         return _oai_fn
 
@@ -73,6 +78,7 @@ def evaluate_ensemble(
     system_prompt: str,
     iteration: int,
     evaluator_configs: dict,
+    data_context: str = "",
 ) -> dict:
     """
     使用所有已启用的评测器进行评测，返回加权集成结果。
@@ -115,12 +121,15 @@ def evaluate_ensemble(
             print(f"    [{name}] 跳过：{failures[name]}")
             continue
 
-        print(f"    [{name}] {cfg['model']} 评测中...")
+        print(f"    [{name}] {cfg['model']} 评测中... (timeout={cfg.get('timeout', 180)}s)")
         try:
             fn = _build_evaluator_fn(cfg)
-            result = fn(query, agent_response, system_prompt, iteration)
+            result = fn(query, agent_response, system_prompt, iteration, data_context)
             per_evaluator[name] = result
             print(f"    [{name}] 完成，加权分 = {result['weighted_score']:.1f}")
+        except KeyboardInterrupt:
+            print(f"\n    [中断] 用户中断，跳过剩余评测器，使用已完成结果（{list(per_evaluator.keys())}）")
+            break
         except Exception as exc:
             failures[name] = str(exc)
             print(f"    [{name}] 失败：{exc}")

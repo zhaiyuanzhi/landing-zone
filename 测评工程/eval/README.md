@@ -1,6 +1,6 @@
 # 市场分析智能体 · 自动化评测 & 提示词迭代系统
 
-基于 **Claude claude-opus-4-6** 作为评测器，自动评估 **qwen3-235b-a22b-instruct-2507** 市场分析智能体的回复质量，并基于评分结果循环迭代优化系统提示词。
+基于多模型集成评测器，自动评估市场分析智能体的回复质量，并基于评分结果循环迭代优化系统提示词。
 
 ---
 
@@ -10,8 +10,10 @@
 - [快速开始](#快速开始)
 - [文件结构](#文件结构)
 - [核心流程](#核心流程)
+- [数据来源](#数据来源)
 - [评分维度](#评分维度)
 - [多模型集成评测器](#多模型集成评测器)
+- [提示词优化器](#提示词优化器)
 - [配置参数](#配置参数)
 - [常用命令](#常用命令)
 - [输出文件说明](#输出文件说明)
@@ -22,26 +24,26 @@
 ## 系统概览
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    eval_pipeline.py（主编排）                  │
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │ agent_runner │ →  │  evaluator   │ →  │   optimizer  │  │
-│  │  (qwen3调用)  │    │ (Claude评测) │    │ (Claude优化) │  │
-│  └──────────────┘    └──────────────┘    └──────────────┘  │
-│         ↑                   ↓                    ↓          │
-│   系统提示词           7维度评分              改进后提示词      │
-│  (market_context)     + 缺陷分析           → 下一轮迭代       │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                    eval_pipeline.py（主编排）                       │
+│                                                                  │
+│  ┌──────────────┐    ┌───────────────────┐    ┌──────────────┐  │
+│  │ agent_runner │ →  │ evaluator_ensemble│ →  │   optimizer  │  │
+│  │ (qwen3 调用)  │    │ (多模型集成评测)    │    │ (多模型可选) │  │
+│  └──────────────┘    └───────────────────┘    └──────────────┘  │
+│         ↑                     ↓                       ↓          │
+│   系统提示词 +            7 维度集成评分             改进后提示词    │
+│   市场数据上下文           + 缺陷分析              → 下一轮迭代     │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 **工作原理：**
 
 1. 用当前系统提示词 + 市场上下文数据调用 qwen3，获取市场分析回复
-2. Claude claude-opus-4-6（开启自适应思考）对回复进行 7 维度评分
-3. 若加权均分 ≥ 阈值（默认 7.5/10）则停止，否则 Claude 针对薄弱维度优化提示词
-4. 用新提示词重复上述步骤，最多迭代 5 轮
-5. 输出最优提示词，可一键回写至 `market_context.py`
+2. 多个评测器（豆包/DeepSeek-R1/Claude 等）对回复进行 7 维度评分，取加权平均
+3. 若加权均分 ≥ 阈值（默认 7.5/10）则停止，否则优化器针对薄弱维度改写提示词
+4. 用新提示词重复上述步骤，最多迭代 N 轮
+5. 回答文件自动落盘至 `eval_results/responses/`，方便人工核查
 
 ---
 
@@ -57,20 +59,27 @@ pip install -r requirements.txt
 ### 2. 配置 API 密钥
 
 ```bash
-# Anthropic（评测器 & 优化器）
-export ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxx
+# 智能体（被评测方）
+export QWEN_API_KEY=your_qwen_api_key
 
-# Qwen3（市场分析智能体）
-export QWEN_API_KEY=sk-xxxxxxxxxxxxxxxx
+# 评测器（至少配置一个）
+export DOUBAO_API_KEY=4c31545d-d554-4e5a-b98c-5ae3a8886652
+export DEEPSEEK_API_KEY=sk-3cb6ff892be247e7a53f1c828a861db8
+export ANTHROPIC_API_KEY=your_anthropic_api_key
 
-# API 接入点（按实际服务商填写）
 export QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+export QWEN_API_KEY=sk-4b1540c9763a4ba58fbf34babe2b6644
+export QWEN_EVAL_API_KEY=sk-4b1540c9763a4ba58fbf34babe2b6644
+
+# 优化器（与评测器共用，按 OPTIMIZER_CONFIG 中的 api_key_env 读取）
+# 若优化器选 DeepSeek-R1，则使用 DEEPSEEK_API_KEY，无需额外配置
 ```
 
-> **常见服务商 BASE_URL：**
+> **常见 BASE_URL：**
 > - 阿里云 DashScope：`https://dashscope.aliyuncs.com/compatible-mode/v1`
+> - 火山引擎（豆包）：`https://ark.cn-beijing.volces.com/api/v3`
+> - DeepSeek：`https://api.deepseek.com/v1`
 > - 硅基流动：`https://api.siliconflow.cn/v1`
-> - 本地 vLLM：`http://localhost:8000/v1`
 
 ### 3. 运行
 
@@ -80,6 +89,12 @@ python eval_pipeline.py
 
 # 仅评测当前提示词，不优化
 python eval_pipeline.py --eval-only
+
+# 已有回答文件时直接跳到评测阶段（默认行为，节省 LLM 调用费用）
+python eval_pipeline.py --eval-only
+
+# 强制重新生成回答（忽略已有缓存文件）
+python eval_pipeline.py --eval-only --force-regen
 ```
 
 ---
@@ -88,28 +103,38 @@ python eval_pipeline.py --eval-only
 
 ```
 eval/
-├── eval_pipeline.py      # 主编排入口，CLI 命令从这里运行
-├── eval_config.py        # 所有配置：API密钥、阈值、测试查询集、权重
-├── eval_rubric.py        # 7 维度评分标准定义 + 工具函数
-├── agent_runner.py       # 调用 qwen3（OpenAI 兼容接口）
-├── evaluator.py          # Claude 评测器（Pydantic 结构化输出）
-├── prompt_optimizer.py   # Claude 提示词优化器（XML 标签输出）
-├── report.py             # 结果查看器（汇总/详情/Diff/趋势）
-├── apply_prompt.py       # 将最优提示词回写 market_context.py
-├── requirements.txt      # Python 依赖
-└── eval_results/         # 运行后自动生成
-    ├── iteration_1.json  # 第 1 轮完整评测数据
-    ├── iteration_2.json
+├── 市场分析-提示词模板.md    # 数据唯一来源：提示词 + 全量市场数据
+│
+├── eval_pipeline.py         # 主编排入口，CLI 命令从这里运行
+├── eval_config.py           # 所有配置：模型、API密钥、阈值、查询集、权重
+├── eval_rubric.py           # 7 维度评分标准定义 + 工具函数
+│
+├── demo_market_context.py   # 从模板文件分割 DEMO_SYSTEM_PROMPT / DEMO_DATA_CONTEXT
+├── agent_runner.py          # 调用 qwen3（OpenAI 兼容接口），注入数据上下文
+│
+├── evaluator.py             # 评测器对外接口（向后兼容入口）
+├── evaluator_ensemble.py    # 多模型集成协调器
+├── evaluator_claude.py      # Claude 评测器（Pydantic 结构化输出）
+├── evaluator_oai.py         # 通用 OpenAI 兼容评测器（Doubao/DeepSeek/Qwen）
+│
+├── prompt_optimizer.py      # 提示词优化器（支持多模型后端）
+├── report.py                # 结果查看器（汇总/详情/Diff/趋势）
+├── apply_prompt.py          # 将最优提示词写回市场分析提示词模板
+├── requirements.txt         # Python 依赖
+│
+├── data/                    # 历史 CSV 文件（已不参与主流程，仅供参考）
+│
+└── eval_results/            # 运行后自动生成
+    ├── responses/           # 智能体回答文件（人工核查用）
+    │   ├── iter1_q1.md      # 第 1 轮 · 第 1 条查询的完整回答
+    │   ├── iter1_q2.md
+    │   └── ...
+    ├── iteration_1.json     # 第 1 轮完整评测数据
     ├── optimization_1.json  # 第 1 轮优化记录（改动摘要 + 预期提升）
-    ├── prompt_v2.md      # 第 2 轮使用的提示词（第 1 轮优化结果）
-    ├── prompt_v3.md
-    ├── best_prompt.md    # 历史最高分对应的提示词
-    └── summary.json      # 总体结果摘要
+    ├── prompt_v2.md         # 第 2 轮使用的提示词（第 1 轮优化结果）
+    ├── best_prompt.md       # 历史最高分对应的提示词
+    └── summary.json         # 总体结果摘要
 ```
-
-> **与主项目的关系：**
-> - `agent_runner.py` 和 `eval_pipeline.py` 会向上一级导入 `market_context.py`（通过 `sys.path` 动态添加）
-> - `apply_prompt.py` 会修改上一级的 `market_context.py`，操作前自动备份为 `.py.bak`
 
 ---
 
@@ -118,129 +143,236 @@ eval/
 ### 完整迭代循环
 
 ```
-初始提示词（market_context.SYSTEM_PROMPT）
+初始提示词（市场分析-提示词模板.md 前半段）
         │
         ▼
-┌───────────────────────────────┐
-│  对每条测试查询调用 qwen3 智能体  │  ← 3 条覆盖不同分析诉求的查询
-└───────────────────────────────┘
-        │
+┌─────────────────────────────────┐
+│  对每条测试查询调用 qwen3 智能体    │  ← eval_config.TEST_QUERIES
+│  （若缓存文件已存在则直接加载）      │
+└─────────────────────────────────┘
+        │  回答自动保存至 responses/iter{N}_q{M}.md
         ▼
-┌───────────────────────────────┐
-│  Claude 对每条回复进行 7 维度评分 │  ← adaptive thinking 保证评分深度
-│  + 分析"提示词设计缺陷"          │
-└───────────────────────────────┘
-        │
+┌─────────────────────────────────┐
+│  多评测器并行对每条回复评 7 维度    │  ← doubao / deepseek_r1 / claude 等
+│  + 分析「提示词设计缺陷」          │
+└─────────────────────────────────┘
+        │  集成：各维度取加权平均分
         ▼
    加权均分 ≥ 7.5 ？
      ┌───┤
     Yes  No
      │    │
    停止   ▼
-        ┌───────────────────────────────┐
-        │  Claude 针对薄弱维度优化提示词   │  ← 保留优势、精准修复
-        └───────────────────────────────┘
-              │
+        ┌─────────────────────────────────┐
+        │  优化器针对薄弱维度改写提示词       │  ← OPTIMIZER_CONFIG 中配置的模型
+        │  保留优势维度，精准修复低分项        │
+        └─────────────────────────────────┘
+              │  新提示词保存至 prompt_v{N+1}.md
               ▼
-           下一轮（最多 5 轮）
+           下一轮（最多 MAX_ITERATIONS 轮）
+```
+
+### 回答文件缓存机制
+
+```
+默认（无 --force-regen）
+  └─ responses/iter{N}_q{1..M}.md 全部存在？
+        ├─ 是 → 直接加载，跳过 LLM 调用 → 直接进入评测
+        └─ 否 → 调用 LLM，生成并保存文件
+
+--force-regen
+  └─ 始终重新调用 LLM，覆盖已有文件
 ```
 
 ### 断点续跑
 
-如果某轮因网络或配额问题中断，可从任意已保存的提示词版本恢复：
-
 ```bash
+# 从第 3 版提示词恢复
 python eval_pipeline.py --resume-from eval_results/prompt_v3.md
 ```
 
 ---
 
+## 数据来源
+
+所有数据均来自单一文件 **`市场分析-提示词模板.md`**，`demo_market_context.py` 在运行时将其自动分割为两个变量：
+
+| 变量 | 内容 | 作用 |
+|------|------|------|
+| `DEMO_SYSTEM_PROMPT` | 模板前半：任务目标、角色定义、约束条件 | 注入 system 消息 |
+| `DEMO_DATA_CONTEXT` | 模板后半：全部宏观/市场/量化数据区块（CSV 格式） | 注入 user 消息 |
+
+**数据区块（均为月频时间序列）：**
+
+| 区块 | 指标 |
+|------|------|
+| Growth | GDP_REAL_YOY、INDUSTRY_YOY、RETAIL_SALES_YOY |
+| Sentiment | PMI_MANU、PMI_SERV、CONSUMER_CONFIDENCE、PMI_NEW_EXPORT_ORDERS |
+| Investment | INFRA/MANU/REAL_ESTATE_INVEST_CUM_YOY |
+| Real_Estate | RESID_HOUSE_SALES_CUM_YOY |
+| Trade | EXPORT/IMPORT_AMOUNT_CNY_YOY |
+| FX | FX_CNY_MID |
+| Credit | M2_YOY、M1_YOY、TSF_STOCK_YOY |
+| Rate | DR007、CREDIT_YTM_AA_3Y、CGB_3Y_YTM、LPR_1Y |
+| Labor | URBAN_SURVEYED_UNEMPLOYMENT_RATE |
+| Fiscal | GOV_EXPEND_CUM_YOY、SPECIAL_BOND_PROGRESS/ISSUE_CUM |
+| Inflation | BRENT_CRUDE、CPI_YOY、PPI_YOY |
+| Risk_Sentiment | VIX、XAUUSD（月均值） |
+| 量化风险结构 | 年化波动率、协方差矩阵、相关矩阵、国债利率期限结构 |
+| 四大资产画像 | CASH/BOND/EQUITY/ALT 风险收益指标（1Y/3Y/5Y） |
+
+> **更新数据**：直接编辑 `市场分析-提示词模板.md`，代码无需任何改动。
+
+---
+
 ## 评分维度
 
-Claude 从以下 7 个维度评分（1–10 分，可用 0.5 步长），按权重加权求和：
+从以下 7 个维度评分（1–10 分，可用 0.5 步长），按权重加权求和：
 
 | # | 维度 | 权重 | 评分要点 |
 |---|------|------|---------|
-| 1 | **结构完整性** | 20% | 是否包含系统提示词要求的全部 7 个分析模块（核心结论/宏观/结构/资金/技术/催化剂/操作建议） |
-| 2 | **数据引用准确性** | 20% | 引用的数字与提供的市场数据完全一致，无捏造、无错误 |
-| 3 | **分析深度** | 20% | 超越数据复述，提供因果推断和前瞻性判断，宏观-中观-微观贯通 |
-| 4 | **结论明确性** | 15% | ≤3 句话内给出：多/空/震荡方向 + 置信度（高/中/低）+ 核心依据 |
-| 5 | **操作可行性** | 10% | 五要素齐备：方向 / 仓位比例 / 时间窗口 / 重点板块 / 规避板块 |
-| 6 | **专业性** | 10% | 事实与判断明确区分，适合机构投资者晨会/研报场景 |
-| 7 | **风险提示** | 5% | 每个风险事件均附有具体名称 + 明确日期 |
+| 1 | **结构完整性** | 20% | 是否包含系统提示词要求的全部分析模块 |
+| 2 | **数据引用准确性** | 20% | 引用数字与提供数据完全一致，无捏造 |
+| 3 | **分析深度** | 20% | 超越数据复述，提供因果推断和前瞻性判断 |
+| 4 | **结论明确性** | 15% | 明确方向 + 置信度 + 核心依据 |
+| 5 | **操作可行性** | 10% | 方向 / 时间窗口 / 重点板块等要素齐备 |
+| 6 | **专业性** | 10% | 事实与判断明确区分，适合机构投资者场景 |
+| 7 | **风险提示** | 5% | 每个风险事件附有具体名称 + 明确日期 |
 
-每个维度的评分理由均会引用回复中的具体内容，确保评分可追溯。
+权重在 `eval_config.DIMENSION_WEIGHTS` 中调整，总和须为 1.0。
 
 ---
 
 ## 多模型集成评测器
 
-### 架构设计
+### 架构
 
 ```
-evaluator.py（对外接口，向后兼容）
+evaluator.py（对外接口）
     └── evaluator_ensemble.py（集成协调器）
             ├── evaluator_claude.py   Claude claude-opus-4-6（Anthropic 原生）
             └── evaluator_oai.py      通用 OpenAI 兼容层
                     ├── 豆包 Doubao   doubao-seed-2-0-pro-260215
                     ├── DeepSeek-V3   deepseek-chat
                     ├── DeepSeek-R1   deepseek-reasoner（含思维链处理）
-                    ├── 千问 Qwen-Max qwen-max
+                    ├── 千问 Qwen-Max  qwen-max
                     └── 千问 Qwen-Plus qwen-plus
 ```
 
 ### 集成评分机制
 
-每个维度的最终分数 = **各评测器得分的加权平均**（权重可在 `EVALUATOR_CONFIGS` 中单独配置）：
-
 ```
-集成分 = Σ(评测器i得分 × 评测器i权重) / Σ(权重)
+集成分（每维度） = Σ(评测器i得分 × 评测器i权重) / Σ(权重)
 ```
 
-额外计算**标准差**衡量评测者之间的分歧程度：
-- 🟢 标准差 < 0.8：高一致，评测结论可信
-- 🟡 标准差 0.8–1.5：中等分歧，可参考各评测器原始理由
-- 🔴 标准差 > 1.5：高分歧，建议人工复核该维度
+额外输出**标准差**衡量评测者分歧：
 
-### 启用各评测器
+| 标准差 | 含义 |
+|--------|------|
+| < 0.8  | 高一致，评测结论可信 |
+| 0.8–1.5 | 中等分歧，可参考各评测器原始理由 |
+| > 1.5  | 高分歧，建议人工复核该维度 |
 
-在 `eval_config.py` 中修改 `EVALUATOR_CONFIGS`，将对应条目的 `enabled` 设为 `True`：
+### 启用/禁用评测器
+
+在 `eval_config.py` 的 `EVALUATOR_CONFIGS` 中设置 `enabled`：
 
 ```python
 EVALUATOR_CONFIGS = {
-    "claude":      {"enabled": True,  ...},   # 默认启用
-    "doubao":      {"enabled": True,  ...},   # 开启豆包
-    "deepseek_v3": {"enabled": True,  ...},   # 开启 DeepSeek-V3
-    "deepseek_r1": {"enabled": False, ...},   # 开启 DeepSeek-R1
-    "qwen_max":    {"enabled": True,  ...},   # 开启千问 Max
-    "qwen_plus":   {"enabled": False, ...},   # 开启千问 Plus
+    "claude":      {"enabled": False, ...},  # Anthropic Claude
+    "doubao":      {"enabled": True,  "timeout": 180, ...},  # 豆包
+    "deepseek_r1": {"enabled": True,  "timeout": 240, ...},  # DeepSeek-R1（推理较慢）
+    "deepseek_v3": {"enabled": False, ...},
+    "qwen_max":    {"enabled": False, ...},
+    "qwen_plus":   {"enabled": False, ...},
 }
 ```
 
-### 各模型环境变量
+### 各评测器所需环境变量
 
-| 评测器 | 环境变量 | 服务商申请地址 |
-|--------|---------|--------------|
-| Claude | `ANTHROPIC_API_KEY` | https://console.anthropic.com |
-| 豆包 Doubao | `DOUBAO_API_KEY` | https://console.volcengine.com/ark |
-| DeepSeek-V3 / R1 | `DEEPSEEK_API_KEY` | https://platform.deepseek.com |
-| 千问 Qwen-Max/Plus | `QWEN_EVAL_API_KEY` | https://dashscope.aliyun.com |
+| 评测器 | 环境变量 |
+|--------|---------|
+| Claude | `ANTHROPIC_API_KEY` |
+| 豆包 Doubao | `DOUBAO_API_KEY` |
+| DeepSeek-V3 / R1 | `DEEPSEEK_API_KEY` |
+| 千问 Qwen-Max/Plus | `QWEN_EVAL_API_KEY` |
 
-> 注意：`QWEN_EVAL_API_KEY` 与智能体侧的 `QWEN_API_KEY` 用途不同（可设同一个值）
+> `QWEN_EVAL_API_KEY` 与智能体侧的 `QWEN_API_KEY` 用途不同，可设同一个值。
 
-### DeepSeek-R1 特殊说明
+### 超时配置
 
-R1 是推理模型，响应中包含思维链内容（`<think>...</think>` 或独立的 `reasoning_content` 字段）。`evaluator_oai.py` 已内置处理逻辑：
-- 自动剥离思维链，只对实际回复内容进行 JSON 提取
-- **必须设置** `use_json_mode: False`（R1 不支持 `response_format=json_object`）
+每个评测器配置项均支持 `timeout`（秒），防止 API 调用无限阻塞：
 
-### 豆包 Doubao 特殊说明
+```python
+"doubao":      {"timeout": 180, ...},  # 默认 180s
+"deepseek_r1": {"timeout": 240, ...},  # R1 推理耗时长，建议 240s+
+```
 
-火山引擎的模型名称为**推理接入点 ID**（endpoint id），格式为 `ep-xxxxxxxx-xxxxx`，需在控制台创建接入点后获取。在 `eval_config.py` 中通过环境变量覆盖：
+若超时，该评测器本次结果被跳过，其余已完成评测器的结果正常汇总。
+
+### DeepSeek-R1 注意事项
+
+- 响应含思维链（`<think>...</think>` 或 `reasoning_content`），`evaluator_oai.py` 已自动剥离
+- **必须设置** `"use_json_mode": False`（R1 不支持 `response_format=json_object`）
+
+### 豆包 Doubao 注意事项
+
+模型名称填写**推理接入点 ID**（格式 `ep-xxxxxxxx-xxxxx`），通过环境变量覆盖默认值：
 
 ```bash
 export DOUBAO_MODEL=ep-20241228xxxxxx-xxxxx
 ```
+
+---
+
+## 提示词优化器
+
+优化器同样支持多模型后端，在 `eval_config.py` 的 `OPTIMIZER_CONFIG` 中切换。
+
+### 切换方法
+
+注释掉当前生效的配置，取消注释所需预设：
+
+```python
+# ── 当前：DeepSeek-R1（推理模型）────────────────────────────
+OPTIMIZER_CONFIG = {
+    "provider":        "openai_compat",
+    "model":           "deepseek-reasoner",
+    "api_key_env":     "DEEPSEEK_API_KEY",
+    "base_url":        "https://api.deepseek.com/v1",
+    "enable_thinking": False,
+    "max_tokens":      8192,
+}
+
+# ── 可选：Claude claude-opus-4-6（含 adaptive thinking）──────────────
+# OPTIMIZER_CONFIG = {
+#     "provider":        "anthropic",
+#     "model":           "claude-opus-4-6",
+#     "api_key_env":     "ANTHROPIC_API_KEY",
+#     "base_url":        None,
+#     "enable_thinking": True,
+#     "max_tokens":      8192,
+# }
+
+# ── 可选：Qwen3-235B（含思维链）──────────────────────────────
+# OPTIMIZER_CONFIG = {
+#     "provider":        "openai_compat",
+#     "model":           "qwen3-235b-a22b-instruct-2507",
+#     "api_key_env":     "QWEN_API_KEY",
+#     "base_url":        "https://dashscope.aliyuncs.com/compatible-mode/v1",
+#     "enable_thinking": True,
+#     "max_tokens":      8192,
+# }
+```
+
+### enable_thinking 说明
+
+| 模型类型 | `enable_thinking: True` 的效果 |
+|---------|-------------------------------|
+| Anthropic Claude | 开启 `thinking={"type": "adaptive"}` |
+| Qwen3 系列 | 附加 `extra_body={"enable_thinking": True}` |
+| DeepSeek-R1 | 忽略（R1 内置推理，无需参数） |
+| 其他模型 | 忽略 |
 
 ---
 
@@ -249,13 +381,9 @@ export DOUBAO_MODEL=ep-20241228xxxxxx-xxxxx
 所有可调参数集中在 `eval_config.py`：
 
 ```python
-# 目标分数：达到后停止迭代
-SCORE_THRESHOLD = 7.5
+SCORE_THRESHOLD = 7.5    # 加权均分达到该值则停止迭代
+MAX_ITERATIONS  = 1      # 最大迭代轮次
 
-# 最大迭代轮次
-MAX_ITERATIONS = 5
-
-# 各维度权重（总和须为 1.0）
 DIMENSION_WEIGHTS = {
     "structure_completeness": 0.20,
     "data_accuracy":          0.20,
@@ -266,17 +394,12 @@ DIMENSION_WEIGHTS = {
     "risk_disclosure":        0.05,
 }
 
-# 测试查询集（可增减）
 TEST_QUERIES = [
-    "请对今日A股市场进行综合解读...",
-    "当前宏观环境下，北向资金持续流出...",
-    "基于今日全球市场联动数据，给出明日A股操作建议...",
+    "2026 年整体经济走势如何，对普通投资者有哪些机会？",
+    "请帮忙做个市场分析?",
+    "目前市场情况如何，理财投资有哪些机会?",
+    "黄金现在价位偏高，还适合入场做长期配置吗?",
 ]
-
-# 模型配置
-EVALUATOR_MODEL = "claude-opus-4-6"   # 评测器
-OPTIMIZER_MODEL = "claude-opus-4-6"   # 优化器
-QWEN_MODEL      = "qwen3-235b-a22b-instruct-2507"
 ```
 
 ---
@@ -286,62 +409,61 @@ QWEN_MODEL      = "qwen3-235b-a22b-instruct-2507"
 ### eval_pipeline.py — 主流程
 
 ```bash
-# 完整流程（默认：最多 5 轮迭代，目标 7.5 分）
-python eval_pipeline.py
+# 完整流程（评测 + 自动迭代优化）
+python3 eval_pipeline.py
 
 # 仅评测，不优化提示词
-python eval_pipeline.py --eval-only
+python3 eval_pipeline.py --eval-only
 
 # 指定最大迭代次数
-python eval_pipeline.py --iterations 3
+python3 eval_pipeline.py --iterations 3
 
 # 从第 3 版提示词断点续跑
-python eval_pipeline.py --resume-from eval_results/prompt_v3.md
+python3 eval_pipeline.py --resume-from eval_results/prompt_v3.md
+
+# 强制重新调用 LLM（忽略已有回答缓存）
+python3 eval_pipeline.py --eval-only --force-regen
 
 # 组合使用
-python eval_pipeline.py --resume-from eval_results/prompt_v2.md --iterations 2
+python3 eval_pipeline.py --resume-from eval_results/prompt_v2.md --iterations 2 --force-regen
 ```
 
 ### report.py — 结果查看
 
 ```bash
 # 汇总 + 各轮得分趋势（默认）
-python report.py
+python3 report.py
 
 # 查看第 2 轮的详细评分和反馈
-python report.py --iteration 2
-python report.py -i 2
+python3 report.py --iteration 2
 
 # 对比第 1 轮和第 3 轮提示词的 Diff
-python report.py --diff 1 3
-python report.py -d 1 3
+python3 report.py --diff 1 3
 
 # 只显示得分趋势表
-python report.py --scores
-python report.py -s
+python3 report.py --scores
 
 # 查看第 2 轮各评测器维度得分对比矩阵（含标准差）
-python report.py --evaluators 2
-python report.py -e 2
+python3 report.py --evaluators 2
 ```
 
-**多评测器对比矩阵示例输出：**
+**多评测器对比矩阵示例：**
 
 ```
 ====================================================================
   第 2 轮  ·  各评测器维度得分对比
 ====================================================================
-  维度        claude  doubao  deepseek  qwen_max  集成均分  标准差
+  维度          doubao  deepseek_r1  集成均分  标准差
   ──────────────────────────────────────────────────────────────
-  结构完整性     8.0     7.5      8.0       8.5     8.00   0.37
-  数据引用准确   8.5     8.0      7.5       8.0     8.00   0.37
-  分析深度       7.0     6.5      7.5       7.0     7.00   0.37
-  结论明确性     8.0     7.5      8.0       8.5     8.00   0.37
-  操作可行性     7.5     7.0      7.5       7.5     7.38   0.21
-  专业性         8.0     7.5      8.0       8.0     7.88   0.22
-  风险提示       6.5     6.0      7.0       7.0     6.63   0.43
+  结构完整性       8.0       8.5       8.25    0.25
+  数据引用准确     7.5       8.0       7.75    0.25
+  分析深度         7.0       7.5       7.25    0.25
+  结论明确性       8.0       8.0       8.00    0.00
+  操作可行性       7.5       7.5       7.50    0.00
+  专业性           8.0       8.5       8.25    0.25
+  风险提示         6.5       7.0       6.75    0.25
   ──────────────────────────────────────────────────────────────
-  加权总分       7.85    7.50     7.80      7.95    7.78
+  加权总分         7.65      7.90      7.78
 ====================================================================
 ```
 
@@ -351,7 +473,7 @@ python report.py -e 2
 # 预览变更（不实际写入）
 python apply_prompt.py --dry-run
 
-# 应用最优提示词到 market_context.py
+# 将最优提示词写回市场分析提示词模板
 python apply_prompt.py
 
 # 应用指定版本的提示词
@@ -365,65 +487,95 @@ python apply_prompt.py --list
 
 ## 输出文件说明
 
+### `eval_results/responses/iter{N}_q{M}.md`
+
+每条查询的完整回答，格式如下：
+
+```markdown
+# 第 1 轮 · 查询 1
+
+**查询：** 2026 年整体经济走势如何，对普通投资者有哪些机会？
+
+**Tokens：** 12345
+
+---
+
+[智能体完整回答内容...]
+```
+
+- 默认复用已有文件，重新评测无需再次调用 LLM
+- `--force-regen` 时覆盖重写
+
 ### `eval_results/summary.json`
 
 ```json
 {
   "completed_at": "2026-03-31T10:30:00",
-  "total_iterations": 3,
-  "best_score": 8.12,
+  "total_iterations": 2,
+  "best_score": 7.85,
   "score_threshold": 7.5,
   "achieved_goal": true,
   "score_history": [
     {"iteration": 1, "score": 6.85},
-    {"iteration": 2, "score": 7.43},
-    {"iteration": 3, "score": 8.12}
+    {"iteration": 2, "score": 7.85}
   ]
 }
 ```
 
 ### `eval_results/iteration_N.json`
 
-每轮的完整评测数据，包含：
+每轮完整评测数据，包含：
 - 本轮使用的系统提示词全文
 - 每条测试查询的 7 维度评分、得分理由、改进建议
-- 提示词缺陷分析（用于驱动下一轮优化）
-- 加权总分
+- 各评测器原始分及标准差（分歧指标）
+- 提示词缺陷分析
 
 ### `eval_results/optimization_N.json`
 
 第 N 轮的优化记录：
-- `changes_summary`：本次改动了哪些内容及原因
+- `changes_summary`：改动了哪些内容及原因
 - `expected_improvements`：预期在哪些维度提升多少分
 
 ---
 
 ## 常见问题
 
-**Q: Qwen3 API 调用失败？**
+**Q: 已有回答文件，只想重跑评测，不想再调用 LLM？**
 
-检查以下几点：
-1. `QWEN_API_KEY` 和 `QWEN_BASE_URL` 环境变量是否正确设置
-2. `QWEN_BASE_URL` 末尾不要加 `/`（`/v1` 结尾即可）
-3. 模型名称是否与服务商支持的一致（可在 `eval_config.py` 的 `QWEN_MODEL` 修改）
+直接运行即可，默认行为就是复用缓存：
 
-**Q: Claude 评测报错 `output_config` 不支持？**
+```bash
+python eval_pipeline.py --eval-only
+```
 
-升级 Anthropic SDK：`pip install --upgrade anthropic`（需 ≥ 0.50.0）
+**Q: 想强制重新生成所有回答？**
+
+```bash
+python eval_pipeline.py --eval-only --force-regen
+```
+
+**Q: 评测器 API 调用超时怎么办？**
+
+在 `eval_config.py` 的 `EVALUATOR_CONFIGS` 中增大对应评测器的 `timeout`（单位秒）。DeepSeek-R1 推理较慢，建议设置 240 秒以上。超时后该评测器本次结果跳过，其余已完成评测器正常汇总。
+
+**Q: 如何更新市场数据？**
+
+直接编辑 `市场分析-提示词模板.md` 中的 CSV 数据区块，代码无需任何改动。
+
+**Q: 想切换提示词优化器模型？**
+
+在 `eval_config.py` 中修改 `OPTIMIZER_CONFIG`，内置预设包括 Claude claude-opus-4-6、Qwen3-235B、DeepSeek-R1、豆包，取消注释对应配置块即可。
 
 **Q: 想提高评测精度？**
 
-在 `eval_config.py` 中增加 `TEST_QUERIES` 数量（建议 5–10 条），覆盖更多市场情景（如单边行情、震荡市、重大事件日等）。
+在 `eval_config.py` 中增加 `TEST_QUERIES` 数量（建议 5–10 条），覆盖更多市场情景；同时启用更多评测器以减少单一模型的偏差。
 
 **Q: 想调整迭代方向（如更注重分析深度）？**
 
-修改 `eval_config.py` 中的 `DIMENSION_WEIGHTS`，提高 `analysis_depth` 的权重即可。注意权重总和须保持 1.0。
+修改 `eval_config.py` 中的 `DIMENSION_WEIGHTS`，提高 `analysis_depth` 的权重即可，总和须保持 1.0。
 
-**Q: apply_prompt.py 误操作怎么恢复？**
+**Q: Qwen3 API 调用失败？**
 
-脚本在写入前会自动备份：`market_context.py.bak`，直接覆盖即可：
-
-```bash
-copy market_context.py.bak market_context.py   # Windows
-cp market_context.py.bak market_context.py     # Linux/macOS
-```
+1. 检查 `QWEN_API_KEY` 和 `QWEN_BASE_URL` 环境变量是否正确
+2. `QWEN_BASE_URL` 末尾不要加 `/`（`/v1` 结尾即可）
+3. 检查 `eval_config.py` 中 `QWEN_MODEL` 的模型名称是否与服务商一致

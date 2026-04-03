@@ -45,9 +45,25 @@ EVAL_SYSTEM = (
 )
 
 
-def build_eval_prompt(query: str, agent_response: str, system_prompt: str, iteration: int) -> str:
+def build_eval_prompt(
+    query: str,
+    agent_response: str,
+    system_prompt: str,
+    iteration: int,
+    data_context: str = "",
+) -> str:
     """构建适用于所有评测器的通用评测提示词"""
     rubric_text = format_rubric_for_prompt()
+
+    data_section = ""
+    if data_context:
+        data_section = f"""
+## 提供给模型的市场数据（用于核查 data_accuracy 维度）
+```
+{data_context}
+```
+"""
+
     return f"""{rubric_text}
 
 ---
@@ -61,7 +77,7 @@ def build_eval_prompt(query: str, agent_response: str, system_prompt: str, itera
 ```
 {system_prompt}
 ```
-
+{data_section}
 ## 智能体回复
 ```
 {agent_response}
@@ -72,6 +88,7 @@ def build_eval_prompt(query: str, agent_response: str, system_prompt: str, itera
 # 评分要求
 - 每个维度给出 1–10 分（可用 0.5 步长），严格依照评分标准
 - reason 须引用回复中的具体内容或数据
+- data_accuracy 维度须对照上方市场数据核查智能体引用的数据是否准确
 - improvement 需对提示词工程有实际指导意义
 - prompt_weakness 仅分析提示词设计问题，不评价数据质量本身
 """
@@ -105,6 +122,7 @@ def evaluate_with_claude(
     iteration: int,
     api_key: str,
     model: str = "claude-opus-4-6",
+    data_context: str = "",
 ) -> dict:
     """
     使用 Claude 进行评测，返回标准评测结果字典。
@@ -116,7 +134,7 @@ def evaluate_with_claude(
         任何 Anthropic API 异常
     """
     client = anthropic.Anthropic(api_key=api_key)
-    eval_user = build_eval_prompt(query, agent_response, system_prompt, iteration)
+    eval_user = build_eval_prompt(query, agent_response, system_prompt, iteration, data_context)
     schema = EvaluationResult.model_json_schema()
 
     response = client.messages.create(

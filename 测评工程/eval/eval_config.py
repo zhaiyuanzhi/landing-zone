@@ -9,7 +9,7 @@ import os
 # 智能体模型（被评测方）
 # ============================================================
 
-QWEN_API_KEY  = os.environ.get("QWEN_API_KEY", "")
+QWEN_API_KEY  = os.environ.get("QWEN_API_KEY", "sk-4b1540c9763a4ba58fbf34babe2b6644")
 QWEN_BASE_URL = os.environ.get(
     "QWEN_BASE_URL",
     "https://dashscope.aliyuncs.com/compatible-mode/v1",
@@ -34,7 +34,7 @@ EVALUATOR_CONFIGS: dict[str, dict] = {
 
     # ── Anthropic Claude（主评测器，高精度）──────────────────
     "claude": {
-        "enabled":     True,
+        "enabled":     False,
         "provider":    "anthropic",
         "model":       "claude-opus-4-6",
         "api_key_env": "ANTHROPIC_API_KEY",
@@ -45,13 +45,14 @@ EVALUATOR_CONFIGS: dict[str, dict] = {
     # 申请地址: https://console.volcengine.com/ark
     # 注意: model 填写推理接入点 ID（endpoint id），形如 ep-xxxxxxxx
     "doubao": {
-        "enabled":       False,           # 设为 True 后生效
+        "enabled":       True,           # 设为 True 后生效
         "provider":      "openai_compat",
         "model":         os.environ.get("DOUBAO_MODEL", "doubao-seed-2-0-pro-260215"),
         "api_key_env":   "DOUBAO_API_KEY",
         "base_url":      "https://ark.cn-beijing.volces.com/api/v3",
-        "use_json_mode": True,
+        "use_json_mode": False,
         "weight":        1.0,
+        "timeout":       180,
     },
 
     # ── DeepSeek-V3（chat，支持 JSON 模式）────────────────────
@@ -68,20 +69,21 @@ EVALUATOR_CONFIGS: dict[str, dict] = {
 
     # ── DeepSeek-R1（推理模型，含思维链，不支持 JSON 模式）────
     "deepseek_r1": {
-        "enabled":       False,
+        "enabled":       True,
         "provider":      "openai_compat",
         "model":         "deepseek-reasoner",
         "api_key_env":   "DEEPSEEK_API_KEY",
         "base_url":      "https://api.deepseek.com/v1",
         "use_json_mode": False,           # R1 不支持 json_object
         "weight":        1.0,
+        "timeout":       240,             # R1 推理耗时较长，给更多时间
     },
 
     # ── 阿里千问 Qwen-Max ─────────────────────────────────────
     # 注意: 此处使用单独的环境变量 QWEN_EVAL_API_KEY
     #       以避免与智能体侧 QWEN_API_KEY 冲突（可设同一个值）
     "qwen_max": {
-        "enabled":       False,
+        "enabled":       True,
         "provider":      "openai_compat",
         "model":         "qwen-max",
         "api_key_env":   "QWEN_EVAL_API_KEY",
@@ -102,6 +104,60 @@ EVALUATOR_CONFIGS: dict[str, dict] = {
     },
 }
 
+# ============================================================
+# 提示词优化器配置（每次只运行一个优化器）
+# ============================================================
+# 字段说明：
+#   provider        : "anthropic" | "openai_compat"
+#   model           : 模型名称
+#   api_key_env     : 读取 API Key 的环境变量名
+#   base_url        : OpenAI 兼容接口地址（anthropic 时不需要）
+#   enable_thinking : 启用思维链（anthropic→adaptive thinking; qwen3→extra_body; 其余忽略）
+#   max_tokens      : 最大输出 token 数
+# ============================================================
+
+#OPTIMIZER_CONFIG: dict = {
+    # ── 当前：Claude claude-opus-4-6（Anthropic 原生，自适应思考）──────────────
+#    "provider":        "anthropic",
+#    "model":           "claude-opus-4-6",
+#    "api_key_env":     "ANTHROPIC_API_KEY",
+#    "base_url":        None,
+#    "enable_thinking": True,
+#    "max_tokens":      8192,
+#}
+
+# ── 可选预设（取消注释并注释掉上方 OPTIMIZER_CONFIG 即可切换）──
+
+# 千问 Qwen3-235B（含思维链，OpenAI 兼容接口）
+# OPTIMIZER_CONFIG = {
+#     "provider":        "openai_compat",
+#     "model":           "qwen3-235b-a22b-instruct-2507",
+#     "api_key_env":     "QWEN_API_KEY",
+#     "base_url":        "https://dashscope.aliyuncs.com/compatible-mode/v1",
+#     "enable_thinking": True,   # extra_body={"enable_thinking": True}
+#     "max_tokens":      8192,
+# }
+
+# DeepSeek-R1（推理模型，内置思维链，无需额外参数）
+OPTIMIZER_CONFIG = {
+     "provider":        "openai_compat",
+     "model":           "deepseek-reasoner",
+    "api_key_env":     "DEEPSEEK_API_KEY",
+     "base_url":        "https://api.deepseek.com/v1",
+     "enable_thinking": False,
+     "max_tokens":      8192,
+}
+
+# 豆包 Doubao-seed-2-0-pro（无思维链）
+# OPTIMIZER_CONFIG = {
+#     "provider":        "openai_compat",
+#     "model":           "doubao-seed-2-0-pro-260215",
+#     "api_key_env":     "DOUBAO_API_KEY",
+#     "base_url":        "https://ark.cn-beijing.volces.com/api/v3",
+#     "enable_thinking": False,
+#     "max_tokens":      8192,
+# }
+
 # 兼容旧字段（evaluator.py 内部仍可引用）
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 EVALUATOR_MODEL   = "claude-opus-4-6"
@@ -112,7 +168,7 @@ OPTIMIZER_MODEL   = "claude-opus-4-6"
 # ============================================================
 
 SCORE_THRESHOLD = 7.5    # 加权均分达到该值则停止迭代
-MAX_ITERATIONS  = 5      # 最大迭代轮次
+MAX_ITERATIONS  = 2      # 最大迭代轮次
 
 # 各评分维度权重（须合计 1.0）
 DIMENSION_WEIGHTS = {
@@ -127,9 +183,9 @@ DIMENSION_WEIGHTS = {
 
 # 测试查询集
 TEST_QUERIES = [
-    "请对今日A股市场进行综合解读，重点关注科技板块的轮动信号与北向资金异动",
-    "当前宏观环境下，北向资金持续流出与人民币汇率波动意味着什么？如何布局后市？",
-    "基于今日全球市场联动数据，给出明日A股操作建议，需标注具体支撑位和阻力位，以及主要风险事件",
+    "2026 年整体经济走势如何，对普通投资者有哪些机会？",
+    "目前市场情况如何，理财投资有哪些机会?",
+    "黄金现在价位偏高，还适合入场做长期配置吗?",
 ]
 
 RESULTS_DIR = "eval_results"

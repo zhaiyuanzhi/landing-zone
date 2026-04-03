@@ -113,6 +113,8 @@ def evaluate_with_oai_compat(
     base_url: str,
     model: str,
     use_json_mode: bool = True,
+    timeout: float = 180.0,
+    data_context: str = "",
 ) -> dict:
     """
     使用 OpenAI 兼容 API 进行评测。
@@ -131,10 +133,10 @@ def evaluate_with_oai_compat(
     Returns:
         标准评测结果字典（与 evaluate_with_claude 格式相同）
     """
-    client = OpenAI(api_key=api_key, base_url=base_url)
+    client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
 
     # 拼接评测提示词，末尾追加 JSON 格式要求
-    eval_user = build_eval_prompt(query, agent_response, system_prompt, iteration)
+    eval_user = build_eval_prompt(query, agent_response, system_prompt, iteration, data_context)
     eval_user += _JSON_SCHEMA_HINT
 
     kwargs = dict(

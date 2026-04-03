@@ -17,9 +17,13 @@ def evaluate_response(
     agent_response: str,
     system_prompt: str,
     iteration: int = 0,
+    data_context: str = "",
 ) -> dict:
     """
     对单条智能体回复进行多模型集成评测。
+
+    Args:
+        data_context: 提供给智能体的市场数据原文，用于评测器核查 data_accuracy
 
     返回值格式与旧版保持兼容，额外增加：
       per_evaluator   : {evaluator_name: result}  各评测器原始分
@@ -32,6 +36,7 @@ def evaluate_response(
         system_prompt=system_prompt,
         iteration=iteration,
         evaluator_configs=EVALUATOR_CONFIGS,
+        data_context=data_context,
     )
 
 

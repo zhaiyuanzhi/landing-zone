@@ -36,7 +36,7 @@ from prompt_optimizer import optimize_prompt
 from eval_rubric import RUBRIC, score_summary
 
 # 初始提示词来自 eval 目录自包含的 Demo 数据（不依赖上级 market_context.py）
-from demo_market_context import DEMO_SYSTEM_PROMPT as INITIAL_SYSTEM_PROMPT
+from demo_market_context import DEMO_SYSTEM_PROMPT as INITIAL_SYSTEM_PROMPT, DEMO_DATA_CONTEXT
 
 
 # ============================================================
@@ -47,6 +47,7 @@ def run_pipeline(
     eval_only: bool = False,
     max_iterations: int | None = None,
     resume_from: str | None = None,
+    force_regen: bool = False,
 ) -> dict:
     """
     执行完整的评测 & 迭代优化流程。
@@ -55,6 +56,7 @@ def run_pipeline(
         eval_only:      True 时只评测，不执行提示词优化
         max_iterations: 覆盖配置文件中的最大迭代次数
         resume_from:    从指定提示词文件恢复（如 eval_results/prompt_v3.md）
+        force_regen:    True 时忽略已有回答文件，强制重新调用智能体
 
     Returns:
         summary dict
@@ -89,7 +91,7 @@ def run_pipeline(
         print(f"{'='*68}")
 
         # ── Step 1: 调用智能体 ────────────────────────────────────
-        agent_results = _run_agents(iteration, current_prompt)
+        agent_results = _run_agents(iteration, current_prompt, results_dir, force_regen)
         if not agent_results:
             print("  所有智能体调用均失败，终止流程。")
             break
@@ -171,10 +173,34 @@ def run_pipeline(
 # 子步骤
 # ============================================================
 
-def _run_agents(iteration: int, system_prompt: str) -> list[dict]:
-    """调用智能体，返回成功的结果列表"""
-    results = []
+def _run_agents(
+    iteration: int,
+    system_prompt: str,
+    results_dir: Path,
+    force_regen: bool = False,
+) -> list[dict]:
+    """
+    调用智能体，返回成功的结果列表，并将每条回答落盘为可读 Markdown 文件。
+
+    若 force_regen=False 且当前轮次所有回答文件均已存在，则直接加载文件跳过 LLM 调用。
+    """
+    responses_dir = results_dir / "responses"
+    responses_dir.mkdir(exist_ok=True)
+
     total = len(TEST_QUERIES)
+
+    # ── 缓存命中：文件全部已存在且不强制重新生成 ───────────────
+    if not force_regen:
+        cached = _try_load_cached_responses(iteration, responses_dir, total)
+        if cached is not None:
+            print(f"\n  [智能体调用] 发现第 {iteration} 轮全部 {total} 条回答文件，直接加载")
+            print(f"  提示：若需重新生成，请添加 --force-regen 参数")
+            for i, r in enumerate(cached, 1):
+                print(f"  [{i}/{total}] 已加载: iter{iteration}_q{i}.md  ({len(r['response'])} 字符)")
+            return cached
+
+    # ── 正常调用 LLM ──────────────────────────────────────────
+    results = []
     print(f"\n  [智能体调用] 共 {total} 个测试查询")
 
     for i, query in enumerate(TEST_QUERIES, 1):
@@ -190,6 +216,10 @@ def _run_agents(iteration: int, system_prompt: str) -> list[dict]:
         tokens   = result["prompt_tokens"] + result["completion_tokens"]
         print(f"         OK — {char_len} 字符 / {tokens} tokens")
 
+        resp_file = responses_dir / f"iter{iteration}_q{i}.md"
+        _save_response_md(resp_file, iteration, i, query, result["response"], tokens, DEMO_DATA_CONTEXT)
+        print(f"         已保存: {resp_file.relative_to(results_dir.parent)}")
+
         results.append({
             "query":    query,
             "response": result["response"],
@@ -197,6 +227,105 @@ def _run_agents(iteration: int, system_prompt: str) -> list[dict]:
         })
 
     return results
+
+
+def _try_load_cached_responses(
+    iteration: int,
+    responses_dir: Path,
+    total: int,
+) -> list[dict] | None:
+    """
+    检查当前轮次所有回答文件是否齐全；齐全则解析并返回，否则返回 None。
+    """
+    results = []
+    for i in range(1, total + 1):
+        path = responses_dir / f"iter{iteration}_q{i}.md"
+        if not path.exists():
+            return None
+        record = _parse_response_md(path)
+        if record is None:
+            return None  # 文件损坏，重新生成
+        results.append(record)
+    return results
+
+
+def _parse_response_md(path: Path) -> dict | None:
+    """
+    解析 _save_response_md 写出的 Markdown 文件，返回 {query, response, tokens}。
+    文件格式：
+        # 第 N 轮 · 查询 M
+        **查询：** {query}
+        **Tokens：** {tokens}
+        ---
+        {response}
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+    # 提取 query
+    query = ""
+    for line in text.splitlines():
+        if line.startswith("**查询：**"):
+            query = line.removeprefix("**查询：**").strip()
+            break
+    if not query:
+        return None
+
+    # 提取 tokens
+    tokens = 0
+    for line in text.splitlines():
+        if line.startswith("**Tokens：**"):
+            try:
+                tokens = int(line.removeprefix("**Tokens：**").strip())
+            except ValueError:
+                pass
+            break
+
+    # 提取 response（第一个 "---\n\n" 之后、附录数据标记之前的内容）
+    sep = "\n---\n\n"
+    idx = text.find(sep)
+    if idx == -1:
+        return None
+    after_sep = text[idx + len(sep):]
+
+    # 去除末尾附录数据区块（_save_response_md 写入的市场数据部分）
+    data_marker = "\n---\n\n## 附："
+    dm_idx = after_sep.find(data_marker)
+    if dm_idx != -1:
+        response = after_sep[:dm_idx].rstrip("\n")
+    else:
+        response = after_sep.rstrip("\n")
+
+    return {"query": query, "response": response, "tokens": tokens}
+
+
+def _save_response_md(
+    path: Path,
+    iteration: int,
+    q_index: int,
+    query: str,
+    response: str,
+    tokens: int,
+    data_context: str = "",
+) -> None:
+    data_section = ""
+    if data_context:
+        data_section = (
+            f"\n---\n\n"
+            f"## 附：提供给模型的市场数据（仅供核查）\n\n"
+            f"{data_context}\n"
+        )
+    content = (
+        f"# 第 {iteration} 轮 · 查询 {q_index}\n\n"
+        f"**查询：** {query}\n\n"
+        f"**Tokens：** {tokens}\n\n"
+        f"---\n\n"
+        f"{response}"
+        f"{data_section}"
+    )
+    path.write_text(content, encoding="utf-8")
 
 
 def _run_evaluations(
@@ -219,6 +348,7 @@ def _run_evaluations(
                 agent_response=ar["response"],
                 system_prompt=system_prompt,
                 iteration=iteration,
+                data_context=DEMO_DATA_CONTEXT,
             )
             eval_result["query"] = ar["query"]
             results.append(eval_result)
@@ -345,10 +475,16 @@ if __name__ == "__main__":
         metavar="PROMPT_FILE",
         help="从已保存的提示词文件恢复（如 eval_results/prompt_v3.md）",
     )
+    parser.add_argument(
+        "--force-regen",
+        action="store_true",
+        help="强制重新调用智能体生成回答，忽略已有的 iter{N}_q{M}.md 缓存文件",
+    )
     args = parser.parse_args()
 
     run_pipeline(
         eval_only=args.eval_only,
         max_iterations=args.iterations,
         resume_from=args.resume_from,
+        force_regen=args.force_regen,
     )
