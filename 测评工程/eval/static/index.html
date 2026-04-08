@@ -1,0 +1,2429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>测评工程 Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --orange: #f0883e;
+      --teal: #39d353;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── 顶部导航 ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .topbar-title span.icon { font-size: 20px; }
+    .topbar-status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge.success { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+    .badge.warning { background: rgba(210,153,34,.15); color: var(--yellow); border: 1px solid rgba(210,153,34,.3); }
+    .badge.info    { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
+
+    /* ── 主体布局 ── */
+    .main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+    /* ── 统计卡片行 ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    .stat-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; }
+    .stat-card .value.green { color: var(--green); }
+    .stat-card .value.accent { color: var(--accent); }
+    .stat-card .value.yellow { color: var(--yellow); }
+    .stat-card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── 分区标题 ── */
+    .section { margin-bottom: 24px; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title-btn {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      padding: 3px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .section-title-btn:hover { background: var(--border); color: var(--text); }
+    .section-title-btn.spinning { animation: spin .8s linear infinite; }
+
+    /* ── 通用卡片 ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+
+    /* ── 模型卡片 ── */
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .model-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      position: relative;
+    }
+    .model-card.disabled { opacity: .5; }
+    .model-card .model-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .model-card .model-id {
+      font-size: 11px;
+      color: var(--accent);
+      font-family: monospace;
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+    .model-card .model-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--text-muted);
+    }
+    .tag.enabled  { background: rgba(63,185,80,.15);  color: var(--green);  }
+    .tag.disabled-tag { background: rgba(139,148,158,.1); color: var(--text-muted); }
+    .tag.provider { background: rgba(88,166,255,.12); color: var(--accent); }
+    .tag.weight   { background: rgba(188,140,255,.12); color: var(--purple); }
+    .tag.optimizer-tag { background: rgba(240,136,62,.15); color: var(--orange); }
+    .model-card .enabled-dot {
+      position: absolute;
+      top: 14px; right: 14px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+    .model-card.disabled .enabled-dot { background: var(--text-muted); }
+
+    /* ── 测试查询 ── */
+    .query-list { display: flex; flex-direction: column; gap: 8px; min-height: 40px; }
+    .query-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .query-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(88,166,255,.1);
+      border-radius: 4px;
+      padding: 2px 7px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .query-text { color: var(--text); font-size: 13px; line-height: 1.5; }
+
+    /* ── 分页控件 ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      gap: 8px;
+    }
+    .pagination-info {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .page-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+      user-select: none;
+    }
+    .page-btn:hover:not(:disabled):not(.active) {
+      background: var(--border);
+      color: var(--text);
+    }
+    .page-btn.active {
+      background: rgba(88,166,255,.2);
+      border-color: rgba(88,166,255,.5);
+      color: var(--accent);
+      font-weight: 600;
+      cursor: default;
+    }
+    .page-btn:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+    .page-btn.arrow { width: 36px; font-size: 15px; }
+
+    /* ── 图表区 ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-container { position: relative; height: 300px; }
+
+    /* ── 维度分数表 ── */
+    .dim-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .dim-table th {
+      text-align: left;
+      padding: 8px 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dim-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .dim-table tr:last-child td { border-bottom: none; }
+    .score-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .score-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--green);
+      transition: width .3s;
+    }
+    .score-val { font-weight: 600; min-width: 32px; text-align: right; }
+    .score-val.high  { color: var(--green); }
+    .score-val.mid   { color: var(--yellow); }
+    .score-val.low   { color: var(--red); }
+    .weight-tag { font-size: 11px; color: var(--text-muted); }
+    .delta { font-size: 12px; }
+    .delta.up   { color: var(--green); }
+    .delta.down { color: var(--red); }
+
+    /* ── 提示词版本 ── */
+    .prompt-versions { display: flex; flex-direction: column; gap: 0; }
+    .prompt-version-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .prompt-version-item:last-child { border-bottom: none; }
+    .prompt-version-item:hover { background: var(--surface2); }
+    .prompt-version-item.active { background: rgba(88,166,255,.08); border-left: 3px solid var(--accent); }
+    .pv-label { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+    .pv-score {
+      font-size: 16px;
+      font-weight: 700;
+      min-width: 48px;
+      text-align: right;
+    }
+    .pv-score.high  { color: var(--green); }
+    .pv-score.mid   { color: var(--yellow); }
+    .pv-score.low   { color: var(--red); }
+    .pv-score.none  { color: var(--text-muted); font-size: 13px; }
+    .pv-arrow { color: var(--text-muted); font-size: 12px; }
+
+    /* ── 提示词查看器 ── */
+    .prompt-viewer-wrap {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .prompt-viewer-wrap { grid-template-columns: 1fr; } }
+    .prompt-content {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 12.5px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 600px;
+      overflow-y: auto;
+      color: var(--text);
+    }
+    .prompt-placeholder {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 60px 20px;
+      font-size: 13px;
+    }
+
+    /* ── 测评集管理 ── */
+    .query-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .query-toolbar .source-badge {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .source-badge.default { background: rgba(139,148,158,.15); color: var(--text-muted); border: 1px solid rgba(139,148,158,.3); }
+    .source-badge.custom  { background: rgba(88,166,255,.15);  color: var(--accent);     border: 1px solid rgba(88,166,255,.3); }
+    .toolbar-spacer { flex: 1; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid;
+      transition: opacity .15s, background .15s;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary {
+      background: rgba(88,166,255,.15);
+      border-color: rgba(88,166,255,.4);
+      color: var(--accent);
+    }
+    .btn-primary:hover:not(:disabled) { background: rgba(88,166,255,.25); }
+    .btn-danger {
+      background: rgba(248,81,73,.1);
+      border-color: rgba(248,81,73,.3);
+      color: var(--red);
+    }
+    .btn-danger:hover:not(:disabled) { background: rgba(248,81,73,.2); }
+    .btn-default {
+      background: var(--surface2);
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+    .btn-default:hover:not(:disabled) { background: var(--border); color: var(--text); }
+
+    /* 拖拽上传区 */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      margin-top: 12px;
+      position: relative;
+    }
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(88,166,255,.05);
+    }
+    .upload-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-zone .upload-icon { font-size: 28px; margin-bottom: 8px; }
+    .upload-zone .upload-hint { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .upload-zone .upload-hint strong { color: var(--accent); }
+
+    /* 上传反馈条 */
+    .upload-feedback {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: none;
+    }
+    .upload-feedback.success { background: rgba(63,185,80,.1);  border: 1px solid rgba(63,185,80,.3);  color: var(--green); }
+    .upload-feedback.error   { background: rgba(248,81,73,.1);  border: 1px solid rgba(248,81,73,.3);  color: var(--red); }
+    .upload-feedback.loading { background: rgba(88,166,255,.08); border: 1px solid rgba(88,166,255,.2); color: var(--accent); }
+
+    /* ── 评分维度配置 ── */
+    .dim-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    .dim-toolbar-left  { display:flex; align-items:center; gap:10px; font-size:13px; }
+    .dim-toolbar-right { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .dim-weight-sum { font-weight:700; font-size:14px; }
+    .dim-weight-sum.ok  { color: var(--green); }
+    .dim-weight-sum.bad { color: var(--red); }
+    .dim-cfg-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .dim-cfg-table th {
+      text-align:left; padding:8px 10px;
+      background:var(--surface); color:var(--text-muted);
+      font-weight:600; border-bottom:2px solid var(--border);
+    }
+    .dim-cfg-table td { padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .dim-cfg-table tbody tr:last-child td { border-bottom:none; }
+    .dim-cfg-table tr.dim-edit-row { background:rgba(88,166,255,.04); }
+    .dim-cfg-table tr.dim-custom-row td:first-child::after {
+      content:"自定义"; font-size:10px; color:var(--accent);
+      margin-left:6px; vertical-align:middle;
+    }
+    .dim-key-badge { font-family:monospace; font-size:11px; background:rgba(139,148,158,.1); padding:2px 6px; border-radius:4px; color:var(--text-muted); }
+    .dim-desc-cell { max-width:280px; color:var(--text-muted); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dim-edit-input {
+      width:100%; background:#0d1117; border:1px solid var(--border);
+      border-radius:4px; padding:5px 8px; color:var(--text); font-size:12px;
+      box-sizing:border-box;
+    }
+    .dim-edit-input:focus { border-color:var(--accent); outline:none; }
+    .dim-edit-input[readonly] { opacity:.55; cursor:not-allowed; }
+    .dim-weight-field { display:flex; align-items:center; gap:4px; }
+    .dim-weight-field .dim-edit-input { width:60px; text-align:right; }
+    .dim-desc-textarea { height:56px; resize:vertical; font-family:inherit; }
+    .dim-act-btn {
+      font-size:11px; padding:3px 9px; border-radius:4px;
+      border:1px solid var(--border); background:transparent;
+      color:var(--text-muted); cursor:pointer; transition:background .15s,color .15s;
+      white-space:nowrap;
+    }
+    .dim-act-btn:hover  { background:var(--border); color:var(--text); }
+    .dim-act-btn.ok     { border-color:var(--green); color:var(--green); }
+    .dim-act-btn.ok:hover   { background:rgba(63,185,80,.15); }
+    .dim-act-btn.del    { border-color:var(--red); color:var(--red); }
+    .dim-act-btn.del:hover  { background:rgba(248,81,73,.15); }
+    .dim-act-btn.primary { border-color:var(--accent); color:var(--accent); }
+    .dim-act-btn.primary:hover { background:rgba(88,166,255,.15); }
+    .dim-feedback { font-size:12px; margin-top:10px; padding:8px 12px; border-radius:6px; display:none; }
+    .dim-feedback.success { color:var(--green); background:rgba(63,185,80,.1); border:1px solid rgba(63,185,80,.3); }
+    .dim-feedback.error   { color:var(--red);   background:rgba(248,81,73,.1);  border:1px solid rgba(248,81,73,.3); }
+    /* 维度编辑弹窗 */
+    .dim-modal-backdrop {
+      position:fixed; inset:0; background:rgba(1,4,9,.72);
+      display:flex; align-items:center; justify-content:center;
+      z-index:1000; padding:20px; box-sizing:border-box;
+    }
+    .dim-modal-box {
+      background:var(--card-bg); border:1px solid var(--border);
+      border-radius:12px; width:100%; max-width:700px;
+      max-height:90vh; display:flex; flex-direction:column;
+      box-shadow:0 24px 64px rgba(0,0,0,.6);
+      animation:modalIn .18s ease;
+    }
+    @keyframes modalIn {
+      from { transform:translateY(12px); opacity:0; }
+      to   { transform:translateY(0);   opacity:1; }
+    }
+    .dim-modal-hdr {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 22px; border-bottom:1px solid var(--border);
+      font-size:15px; font-weight:600; flex-shrink:0;
+    }
+    .dim-modal-close {
+      background:none; border:none; color:var(--text-muted); cursor:pointer;
+      font-size:20px; line-height:1; padding:4px 6px; border-radius:4px;
+    }
+    .dim-modal-close:hover { background:var(--border); color:var(--text); }
+    .dim-modal-body { flex:1; overflow-y:auto; padding:20px 22px; }
+    .dim-modal-ftr {
+      display:flex; justify-content:flex-end; gap:8px;
+      padding:14px 22px; border-top:1px solid var(--border); flex-shrink:0;
+    }
+    .dm-sec-title {
+      font-size:11px; font-weight:700; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.06em;
+      margin:18px 0 10px; display:flex; align-items:center; gap:8px;
+    }
+    .dm-sec-title:first-child { margin-top:0; }
+    .dm-sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .dm-row { display:grid; gap:12px; margin-bottom:12px; }
+    .dm-row.col2 { grid-template-columns:1fr 1fr; }
+    .dm-row.col1 { grid-template-columns:1fr; }
+    .dm-field { display:flex; flex-direction:column; gap:5px; }
+    .dm-label { font-size:12px; color:var(--text-muted); font-weight:500; }
+    .dm-label .req { color:var(--red); margin-left:2px; }
+    .dm-hint  { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .dm-input {
+      background:#0d1117; border:1px solid var(--border);
+      border-radius:6px; padding:7px 10px; color:var(--text); font-size:13px;
+      box-sizing:border-box; width:100%;
+    }
+    .dm-input:focus { border-color:var(--accent); outline:none; }
+    .dm-input[readonly] { opacity:.5; cursor:not-allowed; }
+    .dm-input.ta { resize:vertical; font-family:inherit; line-height:1.5; }
+    .dm-input.ta.tall  { height:72px; }
+    .dm-input.ta.short { height:52px; }
+    .dm-modules-list { display:flex; flex-direction:column; gap:6px; }
+    .dm-module-row { display:flex; gap:6px; align-items:center; }
+    .dm-module-row .dm-input { flex:1; }
+    .dm-module-del { flex-shrink:0; font-size:13px; width:26px; height:26px;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--border); border-radius:4px; background:none;
+      color:var(--text-muted); cursor:pointer; }
+    .dm-module-del:hover { border-color:var(--red); color:var(--red); background:rgba(248,81,73,.1); }
+    .dm-add-module-btn { font-size:11px; color:var(--accent); background:none; border:1px dashed var(--accent); border-radius:4px; padding:4px 12px; cursor:pointer; margin-top:4px; width:100%; }
+    .dm-add-module-btn:hover { background:rgba(88,166,255,.08); }
+    .dm-criteria-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .dm-criteria-item { display:flex; flex-direction:column; gap:5px; }
+    .dm-criteria-lbl { font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; text-align:center; }
+    .dm-criteria-lbl.c-low  { background:rgba(248,81,73,.12);  color:var(--red); }
+    .dm-criteria-lbl.c-mid  { background:rgba(210,153,34,.12); color:#d29922; }
+    .dm-criteria-lbl.c-good { background:rgba(88,166,255,.12); color:var(--accent); }
+    .dm-criteria-lbl.c-best { background:rgba(63,185,80,.12);  color:var(--green); }
+    /* 细则完整度徽标 */
+    .dim-rubric-badge { font-size:10px; padding:1px 6px; border-radius:3px; margin-left:4px; }
+    .dim-rubric-badge.full  { background:rgba(63,185,80,.15);  color:var(--green); }
+    .dim-rubric-badge.part  { background:rgba(210,153,34,.15); color:#d29922; }
+    .dim-rubric-badge.none  { background:rgba(139,148,158,.1); color:var(--text-muted); }
+
+    /* ── API 密钥配置 ── */
+    .key-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 10px;
+    }
+    .key-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+    .key-card.required-card { border-left: 3px solid var(--accent); }
+    .key-card-top { display: flex; align-items: center; gap: 8px; }
+    .key-name { font-size: 12px; font-weight: 700; font-family: monospace; color: var(--text); flex: 1; }
+    .key-desc { font-size: 11px; color: var(--text-muted); }
+    .key-source-badge {
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px;
+    }
+    .key-source-badge.file { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+    .key-source-badge.env  { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
+    .key-source-badge.none { background: rgba(248,81,73,.1); color: var(--red); border: 1px solid rgba(248,81,73,.3); }
+    .key-masked { font-family: monospace; font-size: 11px; color: var(--text-muted); }
+    .key-input-row {
+      display: flex; gap: 6px; align-items: center; margin-top: 2px;
+    }
+    .key-input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 5px; padding: 5px 9px; font-size: 12px; font-family: monospace;
+      color: var(--text); outline: none; transition: border-color .15s;
+    }
+    .key-input:focus { border-color: var(--accent); }
+    .key-input::placeholder { color: var(--text-muted); font-family: sans-serif; }
+    .key-save-btn {
+      padding: 5px 12px; border-radius: 5px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: 1px solid rgba(63,185,80,.4);
+      background: rgba(63,185,80,.12); color: var(--green); white-space: nowrap;
+      transition: background .15s;
+    }
+    .key-save-btn:hover { background: rgba(63,185,80,.22); }
+    .key-clear-btn {
+      padding: 5px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;
+      border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+      transition: background .15s;
+    }
+    .key-clear-btn:hover { background: var(--border); color: var(--red); }
+    .key-tip { font-size: 10px; color: var(--text-muted); }
+
+    /* ── 流水线控制台 ── */
+    .pipeline-status-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      background: var(--text-muted);
+    }
+    .pipeline-status-dot.idle     { background: var(--text-muted); }
+    .pipeline-status-dot.running  { background: var(--green); animation: pulse 1.2s ease-in-out infinite; }
+    .pipeline-status-dot.completed{ background: var(--green); }
+    .pipeline-status-dot.failed   { background: var(--red); }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .5; transform: scale(1.3); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .pipeline-mode-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+    }
+    .mode-card {
+      border: 2px solid var(--border); border-radius: 8px; padding: 14px 16px;
+      cursor: pointer; transition: border-color .15s, background .15s;
+      display: flex; flex-direction: column; gap: 4px; position: relative;
+    }
+    .mode-card:hover { border-color: rgba(88,166,255,.5); background: rgba(88,166,255,.04); }
+    .mode-card.selected {
+      border-color: var(--accent); background: rgba(88,166,255,.08);
+    }
+    .mode-card input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .mode-card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .mode-card-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .mode-card-cmd   {
+      font-family: monospace; font-size: 11px; color: var(--accent);
+      background: rgba(88,166,255,.08); padding: 4px 8px; border-radius: 4px; margin-top: 4px;
+    }
+    .pipeline-options {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
+    }
+    .option-check {
+      display: flex; align-items: center; gap: 7px;
+      cursor: pointer; font-size: 13px; color: var(--text-muted);
+      user-select: none;
+    }
+    .option-check input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+    .option-check:hover { color: var(--text); }
+    .pipeline-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn-run {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; transition: opacity .15s, transform .1s;
+      background: var(--green); color: #000;
+    }
+    .btn-run:hover:not(:disabled) { opacity: .88; }
+    .btn-run:active:not(:disabled) { transform: scale(.97); }
+    .btn-run:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-stop {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1px solid rgba(248,81,73,.4);
+      background: rgba(248,81,73,.1); color: var(--red);
+      transition: background .15s; display: none;
+    }
+    .btn-stop:hover { background: rgba(248,81,73,.2); }
+
+    /* 日志终端 */
+    .terminal {
+      background: #0d1117; border: 1px solid var(--border); border-radius: 8px;
+      padding: 0; overflow: hidden; font-family: "Cascadia Code","Fira Code","Consolas",monospace;
+      font-size: 12px; position: relative;
+    }
+    .terminal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 14px; background: var(--surface2); border-bottom: 1px solid var(--border);
+    }
+    .terminal-title { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+    .terminal-controls { display: flex; gap: 6px; }
+    .terminal-btn {
+      font-size: 11px; padding: 2px 9px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted); transition: background .12s;
+    }
+    .terminal-btn:hover { background: var(--border); color: var(--text); }
+    .terminal-body {
+      height: 340px; overflow-y: auto; padding: 12px 16px;
+      scroll-behavior: smooth;
+    }
+    .log-line { display: flex; gap: 10px; line-height: 1.6; margin-bottom: 1px; }
+    .log-time { color: #444c56; flex-shrink: 0; font-size: 11px; padding-top: 1px; }
+    .log-text { color: #cdd9e5; word-break: break-all; white-space: pre-wrap; }
+    .log-line.err .log-text { color: #f85149; }
+    .log-line.sys .log-text { color: #58a6ff; }
+    .log-line.sys .log-time { color: #58a6ff44; }
+    .terminal-empty {
+      color: #444c56; text-align: center; padding: 60px 20px; font-size: 13px;
+    }
+
+    /* ── 评测器一致性 ── */
+    .std-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--yellow);
+    }
+
+    /* ── 响应式工具 ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── 加载 ── */
+    .loading { color: var(--text-muted); padding: 40px; text-align: center; }
+    .error-msg { color: var(--red); padding: 12px; font-size: 13px; }
+
+    /* ── 滚动条 ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="topbar">
+  <div class="topbar-title">
+    <span class="icon">📊</span>
+    测评工程 Dashboard
+  </div>
+  <div class="topbar-status" id="topbar-status">
+    <span class="loading">加载中…</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 统计卡片 -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="label">加载中</div><div class="value accent">—</div></div>
+  </div>
+
+  <!-- 模型配置 -->
+  <div class="section">
+    <div class="section-title">模型配置</div>
+    <div class="two-col">
+      <!-- 被测智能体 -->
+      <div class="card">
+        <div class="card-title">被测智能体</div>
+        <div id="agent-card" class="loading">加载中…</div>
+      </div>
+      <!-- 优化器 -->
+      <div class="card">
+        <div class="card-title">提示词优化器</div>
+        <div id="optimizer-card" class="loading">加载中…</div>
+      </div>
+    </div>
+    <div style="height:12px"></div>
+    <!-- 评测模型 -->
+    <div class="card">
+      <div class="card-title">评测模型集合（Evaluator Ensemble）</div>
+      <div class="models-grid" id="evaluators-grid">
+        <div class="loading">加载中…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 测评集 -->
+  <div class="section">
+    <div class="section-title">测评集</div>
+    <div class="two-col" style="align-items:start;">
+
+      <!-- 左：当前测评集 -->
+      <div class="card">
+        <div class="query-toolbar">
+          <span style="font-size:14px;font-weight:600;color:var(--text);">测试查询</span>
+          <span id="query-source-badge" class="source-badge default">默认</span>
+          <span id="query-count-label" style="font-size:12px;color:var(--text-muted);"></span>
+          <div class="toolbar-spacer"></div>
+          <button class="btn btn-primary" id="btn-export" title="导出为 Excel">
+            ⬇ 下载 Excel
+          </button>
+          <button class="btn btn-danger" id="btn-reset" title="重置为 eval_config 默认值" style="display:none;">
+            ↺ 重置
+          </button>
+        </div>
+        <div class="query-list" id="query-list">
+          <div class="loading">加载中…</div>
+        </div>
+        <div id="query-pagination"></div>
+        <div id="query-updated-at" style="font-size:11px;color:var(--text-muted);margin-top:6px;display:none;"></div>
+      </div>
+
+      <!-- 右：上传新测评集 -->
+      <div class="card">
+        <div class="card-title">导入测评集</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.7;">
+          上传 <strong style="color:var(--text);">.xlsx</strong> 文件替换当前测评集。<br>
+          Excel 格式：<strong style="color:var(--accent);">B 列</strong>填写查询内容，第 1 行为标题，第 2 行起为数据。<br>
+          也可直接使用下载的模板填写后上传。
+        </div>
+
+        <!-- 格式说明 -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:12px;margin-bottom:2px;">
+          <div style="color:var(--text-muted);margin-bottom:6px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;">Excel 格式示例</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="color:var(--text-muted);">
+                <td style="padding:3px 8px;border:1px solid var(--border);width:40px;text-align:center;">A</td>
+                <td style="padding:3px 8px;border:1px solid var(--border);">B</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:rgba(88,166,255,.06);">
+                <td style="padding:3px 8px;border:1px solid var(--border);text-align:center;color:var(--text-muted);">序号</td>
+                <td style="padding:3px 8px;border:1px solid var(--border);color:var(--accent);font-weight:600;">测试查询</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 8px;border:1px solid var(--border);text-align:center;color:var(--text-muted);">1</td>
+                <td style="padding:3px 8px;border:1px solid var(--border);color:var(--text-muted);">2026 年整体经济走势如何…</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 8px;border:1px solid var(--border);text-align:center;color:var(--text-muted);">2</td>
+                <td style="padding:3px 8px;border:1px solid var(--border);color:var(--text-muted);">目前市场情况如何…</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:6px;color:var(--text-muted);font-size:11px;">
+            支持单列（仅 A 列）或双列（A=序号，B=查询）格式 · 最多 100 条 · 单条 ≤ 500 字
+          </div>
+        </div>
+
+        <!-- 拖拽上传 -->
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" id="file-input" accept=".xlsx,.xls" />
+          <div class="upload-icon">📂</div>
+          <div class="upload-hint">
+            <strong>点击选择</strong>或将 Excel 文件拖拽至此处<br>
+            支持 .xlsx / .xls，文件大小 ≤ 5 MB
+          </div>
+        </div>
+        <div class="upload-feedback" id="upload-feedback"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 评分维度配置 -->
+  <div class="section">
+    <div class="section-title">
+      <span>评分维度</span>
+      <button class="section-title-btn" id="btn-dim-reset" title="重置为系统默认维度">↺ 重置默认</button>
+    </div>
+    <div class="card">
+      <!-- 工具栏 -->
+      <div class="dim-toolbar">
+        <div class="dim-toolbar-left">
+          <span style="color:var(--text-muted);">权重合计：</span>
+          <span class="dim-weight-sum ok" id="dim-weight-sum">100.0%</span>
+          <span id="dim-weight-warn" style="color:var(--red);font-size:12px;display:none;">⚠ 权重之和不等于 100%，请调整后保存</span>
+        </div>
+        <div class="dim-toolbar-right">
+          <button class="dim-act-btn" id="btn-dim-normalize">⟳ 归一化</button>
+          <button class="dim-act-btn" id="btn-dim-add">＋ 添加维度</button>
+          <button class="dim-act-btn primary" id="btn-dim-save">保存配置</button>
+        </div>
+      </div>
+      <!-- 维度表格 -->
+      <div style="overflow-x:auto;">
+        <table class="dim-cfg-table">
+          <thead>
+            <tr>
+              <th>维度名称</th>
+              <th>键名</th>
+              <th style="width:80px;">权重</th>
+              <th>描述</th>
+              <th style="width:88px;">评分标准</th>
+              <th style="width:120px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="dim-cfg-body">
+            <tr><td colspan="6" class="loading">加载中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="dim-feedback" id="dim-feedback"></div>
+    </div>
+  </div>
+
+  <!-- API 密钥配置 -->
+  <div class="section">
+    <div class="section-title">API 密钥配置</div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">密钥管理</div>
+          <div style="font-size:12px;color:var(--text-muted);">
+            密钥保存至本地 <code style="color:var(--accent);font-size:11px;">api_keys.env</code>，已自动加入 .gitignore，不会提交到版本库。
+            系统环境变量中已有的密钥同样生效（文件配置优先）。
+          </div>
+        </div>
+        <span id="keys-overall-status" style="font-size:12px;margin-left:16px;white-space:nowrap;"></span>
+      </div>
+      <div class="key-grid" id="key-grid">
+        <div class="loading">加载中…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 流水线控制台 -->
+  <div class="section">
+    <div class="section-title">流水线控制台</div>
+    <div class="two-col" style="align-items:start;">
+
+      <!-- 左：参数配置 -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div class="pipeline-status-dot idle" id="pl-dot"></div>
+          <span style="font-size:14px;font-weight:600;" id="pl-status-text">空闲</span>
+          <span id="pl-time" style="font-size:12px;color:var(--text-muted);margin-left:auto;"></span>
+        </div>
+
+        <!-- 模式选择 -->
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">运行模式</div>
+        <div class="pipeline-mode-grid" id="mode-grid">
+          <label class="mode-card selected" id="mode-full">
+            <input type="radio" name="pl-mode" value="full" checked />
+            <div class="mode-card-title">完整流程</div>
+            <div class="mode-card-desc">评测 + 自动迭代优化提示词，直至达到分数阈值</div>
+            <div class="mode-card-cmd">eval_pipeline.py</div>
+          </label>
+          <label class="mode-card" id="mode-eval">
+            <input type="radio" name="pl-mode" value="eval_only" />
+            <div class="mode-card-title">仅评测</div>
+            <div class="mode-card-desc">只跑评测评分，不执行提示词优化</div>
+            <div class="mode-card-cmd">eval_pipeline.py --eval-only</div>
+          </label>
+        </div>
+
+        <!-- 附加选项 -->
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">附加选项</div>
+        <div class="pipeline-options">
+          <label class="option-check">
+            <input type="checkbox" id="opt-force-regen" />
+            强制重新生成回答（忽略缓存）
+          </label>
+          <label class="option-check" id="opt-resume-wrap" style="display:none;">
+            <input type="checkbox" id="opt-resume-check" />
+            从指定提示词恢复
+          </label>
+        </div>
+
+        <!-- 从指定提示词恢复 -->
+        <div id="opt-resume-select-wrap" style="display:none;margin-bottom:14px;">
+          <select id="opt-resume-select" style="width:100%;padding:7px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer;">
+            <option value="">— 选择提示词版本 —</option>
+          </select>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="pipeline-actions">
+          <button class="btn-run" id="btn-run">▶ 开始运行</button>
+          <button class="btn-stop" id="btn-stop">◼ 中止</button>
+          <span id="pl-result-badge" style="font-size:12px;display:none;"></span>
+        </div>
+      </div>
+
+      <!-- 右：日志终端 -->
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="terminal-title">
+            <span>●</span> 实时日志
+            <span id="term-log-count" style="color:var(--text-muted);font-size:11px;"></span>
+          </div>
+          <div class="terminal-controls">
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);cursor:pointer;margin-right:4px;">
+              <input type="checkbox" id="term-autoscroll" checked style="accent-color:var(--accent);width:12px;height:12px;" />
+              自动滚动
+            </label>
+            <button class="terminal-btn" id="term-clear">清空</button>
+            <button class="terminal-btn" id="term-copy">复制全部</button>
+          </div>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <div class="terminal-empty">流水线日志将在此处实时显示…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 分数趋势 -->
+  <div class="section">
+    <div class="section-title">
+      <span>分数趋势</span>
+      <button class="section-title-btn" id="btn-refresh-charts" title="刷新图表数据">↻ 刷新数据</button>
+    </div>
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-title">综合得分趋势</div>
+        <div class="chart-container">
+          <canvas id="score-trend-chart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">各维度得分（最新迭代）</div>
+        <div class="chart-container">
+          <canvas id="dim-radar-chart"></canvas>
+        </div>
+      </div>
+    </div>
+    <!-- 各维度对比表 -->
+    <div class="card">
+      <div class="card-title">维度得分对比</div>
+      <div id="dim-table-wrap">
+        <div class="loading">加载中…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示词版本 -->
+  <div class="section">
+    <div class="section-title">提示词版本</div>
+    <div class="prompt-viewer-wrap">
+      <div class="card" style="padding:0;">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;">版本列表</div>
+        <div class="prompt-versions" id="prompt-versions">
+          <div class="loading">加载中…</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span class="card-title" style="margin:0;" id="prompt-viewer-title">提示词内容</span>
+          <span id="prompt-viewer-score" style="font-size:13px;color:var(--text-muted);"></span>
+        </div>
+        <div id="prompt-content-area">
+          <div class="prompt-placeholder">← 点击左侧版本查看内容</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── 工具函数 ──────────────────────────────────────────────────
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+
+function scoreClass(s) {
+  if (s === null || s === undefined) return 'none';
+  if (s >= 7.5) return 'high';
+  if (s >= 6) return 'mid';
+  return 'low';
+}
+
+function scoreBarColor(s) {
+  if (s >= 7.5) return '#3fb950';
+  if (s >= 6)   return '#d29922';
+  return '#f85149';
+}
+
+const DIM_LABELS = {
+  structure_completeness: '结构完整性',
+  data_accuracy:          '数据准确性',
+  analysis_depth:         '分析深度',
+  conclusion_clarity:     '结论清晰度',
+  actionability:          '可操作性',
+  professionalism:        '专业性',
+  risk_disclosure:        '风险披露',
+};
+
+const PROVIDER_LABEL = {
+  anthropic:     'Anthropic',
+  openai_compat: 'OpenAI Compat',
+};
+
+// ── 数据加载 ──────────────────────────────────────────────────
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+// ── 渲染统计行 ─────────────────────────────────────────────────
+function renderStats(overview, iterations) {
+  const sum = overview.summary || {};
+  const achieved = sum.achieved_goal;
+  const bestScore = sum.best_score ?? '—';
+  const totalIter = sum.total_iterations ?? iterations.length;
+
+  const topbarStatus = $('#topbar-status');
+  topbarStatus.innerHTML = `
+    <span>阈值 ${overview.threshold}</span>
+    <span class="badge ${achieved ? 'success' : 'warning'}">
+      ${achieved ? '✓ 已达标' : '进行中'}
+    </span>
+    <span class="badge info">共 ${totalIter} 轮迭代</span>
+  `;
+
+  const statsRow = $('#stats-row');
+  statsRow.innerHTML = `
+    <div class="stat-card">
+      <div class="label">最高综合得分</div>
+      <div class="value ${scoreClass(bestScore)}">${bestScore}</div>
+      <div class="sub">阈值 ${overview.threshold}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">迭代轮次</div>
+      <div class="value accent">${totalIter}</div>
+      <div class="sub">最大 ${overview.max_iterations} 轮</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">评测模型数</div>
+      <div class="value accent">${overview.evaluators.filter(e => e.enabled).length}</div>
+      <div class="sub">共配置 ${overview.evaluators.length} 个</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">测试查询数</div>
+      <div class="value accent">${overview.queries.length}</div>
+      <div class="sub">条测评问题</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">目标状态</div>
+      <div class="value ${achieved ? 'green' : 'yellow'}">${achieved ? '达标' : '未达标'}</div>
+      <div class="sub">${sum.completed_at ? new Date(sum.completed_at).toLocaleString('zh-CN') : '—'}</div>
+    </div>
+  `;
+}
+
+// ── 渲染模型卡片 ───────────────────────────────────────────────
+function renderAgentCard(agent) {
+  $('#agent-card').innerHTML = `
+    <div class="model-card" style="background:transparent;border:none;padding:0;">
+      <div class="model-name">Qwen3</div>
+      <div class="model-id">${agent.model}</div>
+      <div class="model-meta">
+        <span class="tag provider">OpenAI Compat</span>
+        <span class="tag enabled">被测方</span>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-muted);">
+        接入点: <code style="color:var(--accent);font-size:11px;">${agent.base_url}</code>
+      </div>
+    </div>
+  `;
+}
+
+function renderOptimizerCard(optimizer) {
+  $('#optimizer-card').innerHTML = `
+    <div class="model-card" style="background:transparent;border:none;padding:0;">
+      <div class="model-name">${optimizer.model}</div>
+      <div class="model-id">${optimizer.model}</div>
+      <div class="model-meta">
+        <span class="tag provider">${PROVIDER_LABEL[optimizer.provider] || optimizer.provider}</span>
+        <span class="tag optimizer-tag">优化器</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderEvaluators(evaluators) {
+  const grid = $('#evaluators-grid');
+  grid.innerHTML = evaluators.map(e => `
+    <div class="model-card ${e.enabled ? '' : 'disabled'}">
+      <div class="enabled-dot" title="${e.enabled ? '已启用' : '已禁用'}"></div>
+      <div class="model-name">${e.name.replace(/_/g,' ').toUpperCase()}</div>
+      <div class="model-id">${e.model}</div>
+      <div class="model-meta">
+        <span class="tag ${e.enabled ? 'enabled' : 'disabled-tag'}">${e.enabled ? '启用' : '禁用'}</span>
+        <span class="tag provider">${PROVIDER_LABEL[e.provider] || e.provider}</span>
+        <span class="tag weight">权重 ${e.weight}</span>
+        ${e.use_json_mode ? '<span class="tag">JSON</span>' : '<span class="tag" style="color:var(--yellow)">无JSON</span>'}
+        ${e.timeout !== 60 ? `<span class="tag">超时 ${e.timeout}s</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── 测评集分页状态 ─────────────────────────────────────────────
+const PAGE_SIZE = 10;
+const _qs = { queries: [], page: 1 };   // 模块级分页状态
+
+function renderQueries(queries, source, updatedAt) {
+  _qs.queries = queries;
+  _qs.page    = 1;
+
+  // 来源标签
+  const badge = $('#query-source-badge');
+  if (source === 'custom') {
+    badge.textContent = '自定义';
+    badge.className = 'source-badge custom';
+    $('#btn-reset').style.display = '';
+  } else {
+    badge.textContent = '默认';
+    badge.className = 'source-badge default';
+    $('#btn-reset').style.display = 'none';
+  }
+
+  // 数量
+  $('#query-count-label').textContent = `共 ${queries.length} 条`;
+
+  // 更新时间
+  const updEl = $('#query-updated-at');
+  if (updatedAt) {
+    updEl.textContent = `最近导入：${new Date(updatedAt).toLocaleString('zh-CN')}`;
+    updEl.style.display = '';
+  } else {
+    updEl.style.display = 'none';
+  }
+
+  _renderQueryPage();
+}
+
+function _renderQueryPage() {
+  const { queries, page } = _qs;
+  const total     = queries.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const cur       = Math.min(page, totalPages);
+  _qs.page        = cur;
+
+  const start = (cur - 1) * PAGE_SIZE;
+  const slice = queries.slice(start, start + PAGE_SIZE);
+
+  // ── 渲染列表 ──
+  $('#query-list').innerHTML = slice.length
+    ? slice.map((q, i) => `
+        <div class="query-item">
+          <span class="query-num">Q${start + i + 1}</span>
+          <span class="query-text">${escapeHtml(q)}</span>
+        </div>`).join('')
+    : '<div style="color:var(--text-muted);padding:20px;text-align:center;font-size:13px;">暂无测评查询</div>';
+
+  // ── 分页控件（≤10 条时隐藏）──
+  const pgEl = $('#query-pagination');
+  if (total <= PAGE_SIZE) { pgEl.innerHTML = ''; return; }
+
+  // 计算页码范围（最多显示 5 个页码按钮）
+  let pStart = Math.max(1, cur - 2);
+  let pEnd   = Math.min(totalPages, pStart + 4);
+  if (pEnd - pStart < 4) pStart = Math.max(1, pEnd - 4);
+
+  const pageNums = [];
+  for (let p = pStart; p <= pEnd; p++) pageNums.push(p);
+
+  pgEl.innerHTML = `
+    <div class="pagination">
+      <div class="pagination-info">
+        第 ${start + 1}–${Math.min(start + PAGE_SIZE, total)} 条，共 ${total} 条
+      </div>
+      <div class="pagination-controls">
+        <button class="page-btn arrow" id="pg-first" title="首页" ${cur === 1 ? 'disabled' : ''}>«</button>
+        <button class="page-btn arrow" id="pg-prev"  title="上一页" ${cur === 1 ? 'disabled' : ''}>‹</button>
+        ${pageNums.map(p => `
+          <button class="page-btn ${p === cur ? 'active' : ''}" data-page="${p}">${p}</button>
+        `).join('')}
+        <button class="page-btn arrow" id="pg-next"  title="下一页" ${cur === totalPages ? 'disabled' : ''}>›</button>
+        <button class="page-btn arrow" id="pg-last"  title="末页"   ${cur === totalPages ? 'disabled' : ''}>»</button>
+      </div>
+    </div>`;
+
+  // 事件绑定
+  const go = p => { _qs.page = p; _renderQueryPage(); };
+  $('#pg-first').addEventListener('click', () => go(1));
+  $('#pg-prev' ).addEventListener('click', () => go(cur - 1));
+  $('#pg-next' ).addEventListener('click', () => go(cur + 1));
+  $('#pg-last' ).addEventListener('click', () => go(totalPages));
+  $$('.page-btn[data-page]', pgEl).forEach(btn =>
+    btn.addEventListener('click', () => go(+btn.dataset.page))
+  );
+}
+
+// ── 测评集：导出 ────────────────────────────────────────────────
+function setupQueryExport() {
+  $('#btn-export').addEventListener('click', () => {
+    window.location.href = '/api/queries/export';
+  });
+}
+
+// ── 测评集：重置 ────────────────────────────────────────────────
+function setupQueryReset() {
+  $('#btn-reset').addEventListener('click', async () => {
+    if (!confirm('确定重置为 eval_config.py 中的默认测评集？')) return;
+    try {
+      const data = await fetch('/api/queries/reset', { method: 'DELETE' }).then(r => r.json());
+      renderQueries(data.queries, data.source, null);
+      showFeedback('success', `✓ 已重置为默认测评集（${data.count} 条）`);
+    } catch (e) {
+      showFeedback('error', `重置失败：${e.message}`);
+    }
+  });
+}
+
+// ── 测评集：上传 ────────────────────────────────────────────────
+function setupQueryUpload() {
+  const zone     = $('#upload-zone');
+  const fileInput = $('#file-input');
+
+  // 拖拽样式
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) uploadFile(file);
+  });
+
+  // 点击选文件
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) uploadFile(fileInput.files[0]);
+    fileInput.value = '';   // 允许再次选同一文件
+  });
+}
+
+async function uploadFile(file) {
+  const allowed = ['.xlsx', '.xls'];
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!allowed.includes(ext)) {
+    showFeedback('error', '仅支持 .xlsx / .xls 格式');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showFeedback('error', '文件过大，请控制在 5 MB 以内');
+    return;
+  }
+
+  showFeedback('loading', `正在解析「${file.name}」…`);
+  $('#btn-export').disabled = true;
+
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    const resp = await fetch('/api/queries/import', { method: 'POST', body: form });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      showFeedback('error', `导入失败：${data.detail || resp.statusText}`);
+      return;
+    }
+
+    renderQueries(data.queries, 'custom', data.updated_at);
+    showFeedback('success', `✓ 成功导入 ${data.count} 条测试查询`);
+  } catch (e) {
+    showFeedback('error', `网络错误：${e.message}`);
+  } finally {
+    $('#btn-export').disabled = false;
+  }
+}
+
+function showFeedback(type, msg) {
+  const el = $('#upload-feedback');
+  el.className = `upload-feedback ${type}`;
+  el.textContent = msg;
+  el.style.display = '';
+  if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// ══════════════════════════════════════════════════════
+//  评分维度配置
+// ══════════════════════════════════════════════════════
+
+let _dims = [];          // 工作副本（表格数据）
+let _dimModalIdx = -1;   // 弹窗正在编辑的行索引
+let _dimModules  = [];   // 弹窗内 key_modules 临时列表
+
+// ── 加载 & 渲染表格 ──────────────────────────────────
+
+async function loadDimensions() {
+  try {
+    _dims = await fetchJSON('/api/dimensions');
+    renderDimCfg();
+  } catch (e) {
+    $('#dim-cfg-body').innerHTML =
+      `<tr><td colspan="6" class="error-msg" style="padding:12px;">加载失败：${escapeHtml(e.message)}</td></tr>`;
+  }
+}
+
+function _dimCriteriaStatus(d) {
+  const c = d.criteria || {};
+  const filled = ['1–3','4–6','7–8','9–10'].filter(k => c[k]?.trim()).length;
+  if (filled === 4) return '<span class="dim-rubric-badge full">细则完整</span>';
+  if (filled  >  0) return `<span class="dim-rubric-badge part">细则 ${filled}/4</span>`;
+  return '<span class="dim-rubric-badge none">无细则</span>';
+}
+
+function renderDimCfg() {
+  _dimUpdateWeightSum();
+  const body = $('#dim-cfg-body');
+  if (!_dims.length) {
+    body.innerHTML = '<tr><td colspan="6" style="padding:12px;color:var(--text-muted);">暂无维度配置</td></tr>';
+    return;
+  }
+  body.innerHTML = _dims.map((d, i) => {
+    const mods = (d.key_modules || []).length;
+    return `<tr class="${d.is_custom ? 'dim-custom-row' : ''}">
+      <td>
+        <strong>${escapeHtml(d.name)}</strong>
+        ${mods ? `<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">(${mods}模块)</span>` : ''}
+      </td>
+      <td><code class="dim-key-badge">${escapeHtml(d.key)}</code></td>
+      <td><span class="weight-tag">${(d.weight * 100).toFixed(1)}%</span></td>
+      <td class="dim-desc-cell" title="${escapeHtml(d.description)}">${escapeHtml(d.description) || '<span style="color:var(--text-muted);">—</span>'}</td>
+      <td>${_dimCriteriaStatus(d)}</td>
+      <td style="white-space:nowrap;">
+        <button class="dim-act-btn" onclick="dimModalOpen(${i})">详情/编辑</button>
+        <button class="dim-act-btn del" onclick="dimDelete(${i})" style="margin-left:4px;">删除</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function _dimUpdateWeightSum() {
+  const sum = _dims.reduce((a, d) => a + (d.weight || 0), 0);
+  const el = $('#dim-weight-sum');
+  const warn = $('#dim-weight-warn');
+  el.textContent = (sum * 100).toFixed(1) + '%';
+  const ok = Math.abs(sum - 1.0) < 0.006;
+  el.className = `dim-weight-sum ${ok ? 'ok' : 'bad'}`;
+  warn.style.display = ok ? 'none' : '';
+}
+
+// ── 弹窗：打开 / 关闭 ────────────────────────────────
+
+function dimModalOpen(i) {
+  _dimModalIdx = i;
+  const d = _dims[i];
+
+  // 填充基本字段
+  document.getElementById('dm-name').value   = d.name        || '';
+  document.getElementById('dm-weight').value = ((d.weight || 0) * 100).toFixed(1);
+  document.getElementById('dm-desc').value   = d.description || '';
+
+  // 键名：系统维度不可改
+  const keyInput = document.getElementById('dm-key');
+  keyInput.value    = d.key || '';
+  keyInput.readOnly = !d.is_custom;
+  document.getElementById('dm-key-hint').style.display = d.is_custom ? 'none' : '';
+
+  // 必须包含的模块
+  _dimModules = [...(d.key_modules || [])];
+  _renderModuleList();
+
+  // 评分细则（键名含全角破折号，与 Python 保持一致）
+  const c = d.criteria || {};
+  document.getElementById('dm-c13').value  = c['1–3']  || '';
+  document.getElementById('dm-c46').value  = c['4–6']  || '';
+  document.getElementById('dm-c78').value  = c['7–8']  || '';
+  document.getElementById('dm-c910').value = c['9–10'] || '';
+
+  $('#dim-modal-ttl').textContent = d.is_custom
+    ? (d._isNew ? '添加自定义维度' : `编辑自定义维度：${d.name}`)
+    : `编辑维度：${d.name}`;
+  $('#dim-modal').style.display = '';
+  setTimeout(() => document.getElementById('dm-name')?.focus(), 60);
+}
+
+function dimModalClose() {
+  $('#dim-modal').style.display = 'none';
+  _dimModalIdx = -1;
+}
+
+function dimModalCancel() {
+  // 若是刚添加但未填的新行则移除
+  if (_dimModalIdx >= 0 && _dims[_dimModalIdx]?._isNew) {
+    _dims.splice(_dimModalIdx, 1);
+    renderDimCfg();
+  }
+  dimModalClose();
+}
+
+// ── 弹窗：保存 ───────────────────────────────────────
+
+function dimModalSave() {
+  const name   = document.getElementById('dm-name').value.trim();
+  const key    = document.getElementById('dm-key').value.trim();
+  const wtRaw  = parseFloat(document.getElementById('dm-weight').value);
+  const desc   = document.getElementById('dm-desc').value.trim();
+
+  if (!name)  { alert('维度名称不能为空'); return; }
+  if (!key)   { alert('键名不能为空'); return; }
+  if (!/^[a-z][a-z0-9_]*$/.test(key)) {
+    alert('键名只能包含小写字母、数字、下划线，且必须以字母开头');
+    return;
+  }
+  if (isNaN(wtRaw) || wtRaw < 0) { alert('权重必须为非负数'); return; }
+
+  // 键名唯一性校验（排除自身）
+  const dup = _dims.findIndex((d, idx) => idx !== _dimModalIdx && d.key === key);
+  if (dup >= 0) { alert(`键名 "${key}" 已被「${_dims[dup].name}」使用，请更换`); return; }
+
+  // 收集模块列表（先从 DOM 同步）
+  _syncModulesFromDom();
+  const key_modules = _dimModules.map(m => m.trim()).filter(Boolean);
+
+  // 收集评分细则（全角破折号保持与 Python RUBRIC 一致）
+  const criteria = {};
+  const cMap = { 'dm-c13': '1–3', 'dm-c46': '4–6', 'dm-c78': '7–8', 'dm-c910': '9–10' };
+  for (const [elId, rangeKey] of Object.entries(cMap)) {
+    const v = document.getElementById(elId).value.trim();
+    if (v) criteria[rangeKey] = v;
+  }
+
+  const weight = Math.round(wtRaw / 100 * 10000) / 10000;
+  const prev = _dims[_dimModalIdx];
+  _dims[_dimModalIdx] = {
+    ...prev, name, key, weight, description: desc, key_modules, criteria,
+    _isNew: undefined,
+  };
+  delete _dims[_dimModalIdx]._isNew;
+
+  dimModalClose();
+  renderDimCfg();
+}
+
+// ── 弹窗：必须包含的模块 ─────────────────────────────
+
+function _syncModulesFromDom() {
+  $$('#dm-modules-list .dm-module-input').forEach((inp, i) => {
+    _dimModules[i] = inp.value;
+  });
+}
+
+function _renderModuleList() {
+  const list = $('#dm-modules-list');
+  if (!_dimModules.length) {
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:4px 0 6px;">暂无模块要求（留空则不限）</div>';
+    return;
+  }
+  list.innerHTML = _dimModules.map((m, i) => `
+    <div class="dm-module-row">
+      <input class="dm-input dm-module-input" value="${escapeHtml(m)}" placeholder="模块名称">
+      <button class="dm-module-del" onclick="dimModuleRemove(${i})" title="删除">✕</button>
+    </div>
+  `).join('');
+}
+
+function dimModuleAdd() {
+  _syncModulesFromDom();
+  _dimModules.push('');
+  _renderModuleList();
+  setTimeout(() => {
+    const inputs = $$('#dm-modules-list .dm-module-input');
+    inputs[inputs.length - 1]?.focus();
+  }, 30);
+}
+
+function dimModuleRemove(i) {
+  _syncModulesFromDom();
+  _dimModules.splice(i, 1);
+  _renderModuleList();
+}
+
+// ── 表格操作 ─────────────────────────────────────────
+
+function dimDelete(i) {
+  if (!confirm(`确定删除维度「${_dims[i].name}」？`)) return;
+  _dims.splice(i, 1);
+  renderDimCfg();
+}
+
+function dimAdd() {
+  _dims.push({ key: '', name: '', weight: 0, description: '', criteria: {}, key_modules: [], is_custom: true, _isNew: true });
+  dimModalOpen(_dims.length - 1);
+}
+
+function dimNormalize() {
+  const sum = _dims.reduce((a, d) => a + (d.weight || 0), 0);
+  if (sum <= 0) { alert('所有权重为 0，无法归一化'); return; }
+  _dims = _dims.map(d => ({ ...d, weight: Math.round(d.weight / sum * 10000) / 10000 }));
+  renderDimCfg();
+}
+
+// ── 持久化 ───────────────────────────────────────────
+
+async function saveDimensions() {
+  if (!_dims.length) { alert('维度列表不能为空'); return; }
+  const sum = _dims.reduce((a, d) => a + (d.weight || 0), 0);
+  if (Math.abs(sum - 1.0) > 0.005) {
+    if (!confirm(`权重之和为 ${(sum * 100).toFixed(1)}%，建议先点击"归一化"调整到 100%。\n是否仍要直接保存？`)) return;
+  }
+  const btn = $('#btn-dim-save');
+  btn.disabled = true; btn.textContent = '保存中…';
+  try {
+    const payload = _dims.map(d => ({
+      key: d.key, name: d.name, weight: d.weight,
+      description: d.description || '',
+      criteria: d.criteria || {},
+      key_modules: d.key_modules || [],
+      is_custom: !!d.is_custom,
+    }));
+    const r = await fetch('/api/dimensions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const res = await r.json();
+    if (!r.ok) throw new Error(res.detail || r.statusText);
+    _dimShowFeedback('success', `✓ 已保存 ${res.count} 个维度配置，下次运行流水线时自动生效`);
+    await loadDimensions();
+  } catch (e) {
+    _dimShowFeedback('error', `保存失败：${escapeHtml(e.message)}`);
+  } finally {
+    btn.disabled = false; btn.textContent = '保存配置';
+  }
+}
+
+async function resetDimensions() {
+  if (!confirm('确定重置为系统默认维度？所有自定义修改将丢失。')) return;
+  try {
+    const r = await fetch('/api/dimensions', { method: 'DELETE' });
+    if (!r.ok) throw new Error((await r.json()).detail);
+    _dimShowFeedback('success', '✓ 已重置为系统默认维度');
+    await loadDimensions();
+  } catch (e) {
+    _dimShowFeedback('error', `重置失败：${escapeHtml(e.message)}`);
+  }
+}
+
+function _dimShowFeedback(type, msg) {
+  const el = $('#dim-feedback');
+  el.className = `dim-feedback ${type}`;
+  el.innerHTML = msg;
+  el.style.display = '';
+  if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
+function setupDimensions() {
+  $('#btn-dim-add').addEventListener('click', dimAdd);
+  $('#btn-dim-normalize').addEventListener('click', dimNormalize);
+  $('#btn-dim-save').addEventListener('click', saveDimensions);
+  $('#btn-dim-reset').addEventListener('click', resetDimensions);
+}
+
+// ── 渲染分数趋势图 ─────────────────────────────────────────────
+let scoreTrendChart = null;
+let dimRadarChart   = null;
+
+function renderScoreTrend(iterations, threshold) {
+  const labels     = iterations.map(it => `第 ${it.iteration} 轮`);
+  const scores     = iterations.map(it => it.avg_score);
+  const ptColors   = scores.map(s => s >= threshold ? '#3fb950' : '#d29922');
+  const threshData = labels.map(() => threshold);
+
+  // ── 已有实例：原地更新，避免 destroy 后 context 失效 ──
+  if (scoreTrendChart) {
+    scoreTrendChart.data.labels                              = labels;
+    scoreTrendChart.data.datasets[0].data                   = scores;
+    scoreTrendChart.data.datasets[0].pointBackgroundColor   = ptColors;
+    scoreTrendChart.data.datasets[1].data                   = threshData;
+    scoreTrendChart.data.datasets[1].label                  = `达标阈值 (${threshold})`;
+    scoreTrendChart.update('active');
+    return;
+  }
+
+  // ── 首次创建 ──
+  const canvas = $('#score-trend-chart');
+  scoreTrendChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '综合得分',
+          data: scores,
+          borderColor: '#58a6ff',
+          backgroundColor: 'rgba(88,166,255,.15)',
+          borderWidth: 2.5,
+          pointBackgroundColor: ptColors,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          fill: true,
+          tension: .3,
+        },
+        {
+          label: `达标阈值 (${threshold})`,
+          data: threshData,
+          borderColor: 'rgba(248,81,73,.55)',
+          borderDash: [6, 4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { labels: { color: '#8b949e', font: { size: 12 } } },
+        tooltip: {
+          backgroundColor: '#21262d',
+          borderColor: '#30363d',
+          borderWidth: 1,
+          titleColor: '#e6edf3',
+          bodyColor: '#8b949e',
+          callbacks: {
+            label: c => ` 得分: ${c.parsed.y.toFixed(2)}`,
+          },
+        },
+      },
+      scales: {
+        x: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } },
+        y: {
+          min: 0, max: 10,
+          grid: { color: '#21262d' },
+          ticks: { color: '#8b949e', stepSize: 1 },
+        },
+      },
+    },
+  });
+}
+
+function renderDimRadar(latest) {
+  if (!latest || !latest.avg_scores) return;
+  const dims   = Object.keys(DIM_LABELS);
+  const labels = dims.map(d => DIM_LABELS[d]);
+  const data   = dims.map(d => latest.avg_scores[d] ?? 0);
+  const title  = `第 ${latest.iteration} 轮`;
+
+  // ── 已有实例：原地更新 ──
+  if (dimRadarChart) {
+    dimRadarChart.data.datasets[0].data  = data;
+    dimRadarChart.data.datasets[0].label = title;
+    dimRadarChart.update('active');
+    return;
+  }
+
+  // ── 首次创建 ──
+  const canvas = $('#dim-radar-chart');
+  dimRadarChart = new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        label: title,
+        data,
+        borderColor: '#58a6ff',
+        backgroundColor: 'rgba(88,166,255,.15)',
+        borderWidth: 2,
+        pointBackgroundColor: '#58a6ff',
+        pointRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { labels: { color: '#8b949e' } },
+        tooltip: {
+          backgroundColor: '#21262d',
+          borderColor: '#30363d',
+          borderWidth: 1,
+          titleColor: '#e6edf3',
+          bodyColor: '#8b949e',
+          callbacks: {
+            label: c => ` ${c.parsed.r.toFixed(1)} 分`,
+          },
+        },
+      },
+      scales: {
+        r: {
+          min: 0, max: 10,
+          grid: { color: '#30363d' },
+          angleLines: { color: '#30363d' },
+          pointLabels: { color: '#8b949e', font: { size: 11 } },
+          ticks: { color: '#8b949e', backdropColor: 'transparent', stepSize: 2 },
+        },
+      },
+    },
+  });
+}
+
+// ── 渲染维度对比表 ─────────────────────────────────────────────
+function renderDimTable(iterations, weights) {
+  if (!iterations.length) {
+    $('#dim-table-wrap').innerHTML = '<div class="loading">暂无数据</div>';
+    return;
+  }
+
+  const dims = Object.keys(DIM_LABELS);
+  const headers = ['维度', '权重', ...iterations.map(it => `第 ${it.iteration} 轮`), '变化'];
+
+  let html = `<table class="dim-table"><thead><tr>
+    ${headers.map(h => `<th>${h}</th>`).join('')}
+    <th>评测一致性</th>
+  </tr></thead><tbody>`;
+
+  for (const dim of dims) {
+    const w = weights[dim] ?? 0;
+    const scores = iterations.map(it => it.avg_scores[dim] ?? null);
+    const first = scores[0];
+    const last = scores[scores.length - 1];
+    const delta = (first !== null && last !== null) ? (last - first) : null;
+
+    const lastStd = iterations[iterations.length - 1]?.avg_evaluator_std?.[dim];
+
+    const scoreCells = scores.map(s =>
+      s !== null
+        ? `<td><div class="score-bar-wrap">
+            <div class="score-bar" style="width:${(s/10*80).toFixed(0)}px;background:${scoreBarColor(s)};"></div>
+            <span class="score-val ${scoreClass(s)}">${s.toFixed(1)}</span>
+           </div></td>`
+        : '<td style="color:var(--text-muted)">—</td>'
+    ).join('');
+
+    let deltaHtml = '—';
+    if (delta !== null) {
+      const sign = delta >= 0 ? '+' : '';
+      const cls = delta >= 0 ? 'up' : 'down';
+      deltaHtml = `<span class="delta ${cls}">${sign}${delta.toFixed(2)}</span>`;
+    }
+
+    const stdHtml = lastStd !== undefined
+      ? `<div style="display:flex;align-items:center;gap:6px;">
+          <div class="std-bar" style="width:${Math.min(lastStd * 20, 60).toFixed(0)}px;opacity:${Math.min(lastStd/2+.3,1)};"></div>
+          <span style="font-size:11px;color:var(--text-muted);">${lastStd.toFixed(2)}</span>
+         </div>`
+      : '—';
+
+    html += `<tr>
+      <td><strong>${DIM_LABELS[dim]}</strong><br><span style="font-size:11px;color:var(--text-muted);">${dim}</span></td>
+      <td><span class="weight-tag">${(w * 100).toFixed(0)}%</span></td>
+      ${scoreCells}
+      <td>${deltaHtml}</td>
+      <td>${stdHtml}</td>
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  $('#dim-table-wrap').innerHTML = html;
+}
+
+// ── 渲染提示词版本列表 ─────────────────────────────────────────
+let selectedVersion = null;
+
+async function renderPromptVersions(prompts) {
+  const container = $('#prompt-versions');
+  container.innerHTML = prompts.map(p => `
+    <div class="prompt-version-item" data-version="${p.version}" data-label="${p.label}" data-score="${p.score ?? ''}">
+      <div class="pv-label">${p.label}</div>
+      <div class="pv-score ${scoreClass(p.score)}">${p.score !== null && p.score !== undefined ? p.score.toFixed(2) : '—'}</div>
+      <div class="pv-arrow">›</div>
+    </div>
+  `).join('');
+
+  $$('.prompt-version-item').forEach(el => {
+    el.addEventListener('click', async () => {
+      $$('.prompt-version-item').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      const version = el.dataset.version;
+      const label = el.dataset.label;
+      const score = el.dataset.score;
+      await loadPromptContent(version, label, score);
+    });
+  });
+
+  // 默认选中 best
+  const bestEl = $('.prompt-version-item[data-version="best"]');
+  if (bestEl) bestEl.click();
+  else if (container.firstElementChild) container.firstElementChild.click();
+}
+
+async function loadPromptContent(version, label, score) {
+  const area = $('#prompt-content-area');
+  area.innerHTML = '<div class="loading">加载中…</div>';
+  $('#prompt-viewer-title').textContent = label;
+  $('#prompt-viewer-score').textContent = score ? `综合得分 ${parseFloat(score).toFixed(2)}` : '';
+
+  try {
+    const data = await fetchJSON(`/api/prompt/${version}`);
+    area.innerHTML = `<pre class="prompt-content">${escapeHtml(data.content)}</pre>`;
+  } catch (e) {
+    area.innerHTML = `<div class="error-msg">加载失败: ${e.message}</div>`;
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ══════════════════════════════════════════════════════
+//  流水线控制台
+// ══════════════════════════════════════════════════════
+const PL = { evtSource: null, polling: null, logBuf: [], startTs: null };
+
+const STATUS_MAP = {
+  idle:      { cls: 'idle',      label: '空闲',         badge: null },
+  running:   { cls: 'running',   label: '运行中…',      badge: null },
+  completed: { cls: 'completed', label: '已完成',       badge: { text: '✓ 成功', color: 'var(--green)' } },
+  failed:    { cls: 'failed',    label: '失败 / 已中止', badge: { text: '✗ 失败', color: 'var(--red)' } },
+};
+
+function plSetStatus(status, overrideLabel) {
+  const cfg = STATUS_MAP[status] || STATUS_MAP.idle;
+  $('#pl-dot').className        = `pipeline-status-dot ${cfg.cls}`;
+  $('#pl-status-text').textContent = overrideLabel || cfg.label;
+  const running = status === 'running';
+  $('#btn-run').disabled         = running;
+  $('#btn-stop').style.display   = running ? '' : 'none';
+  const badge = $('#pl-result-badge');
+  if (cfg.badge) {
+    badge.textContent  = cfg.badge.text;
+    badge.style.color  = cfg.badge.color;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function plSetTime(startedAt, finishedAt) {
+  const el = $('#pl-time');
+  if (!startedAt) { el.textContent = ''; return; }
+  const ms  = (finishedAt ? new Date(finishedAt) : new Date()) - new Date(startedAt);
+  const s   = Math.round(ms / 1000);
+  const dur = s < 60 ? `${s}s` : `${Math.floor(s/60)}m ${s%60}s`;
+  el.textContent = finishedAt
+    ? `耗时 ${dur} · ${new Date(startedAt).toLocaleTimeString('zh-CN')}`
+    : `已运行 ${dur}`;
+}
+
+// ── 终端日志 ─────────────────────────────────────────
+function termAppend(entries) {
+  if (!entries.length) return;
+  const body = $('#terminal-body');
+  const empty = body.querySelector('.terminal-empty');
+  if (empty) empty.remove();
+
+  const frag = document.createDocumentFragment();
+  for (const e of entries) {
+    PL.logBuf.push(e);
+    const div = document.createElement('div');
+    div.className = `log-line ${e.stream || 'out'}`;
+    div.innerHTML = `<span class="log-time">${e.t}</span><span class="log-text">${escapeHtml(e.line)}</span>`;
+    frag.appendChild(div);
+  }
+  body.appendChild(frag);
+  if ($('#term-autoscroll').checked) body.scrollTop = body.scrollHeight;
+  $('#term-log-count').textContent = `(${PL.logBuf.length} 行)`;
+}
+
+function termClear() {
+  PL.logBuf = [];
+  $('#terminal-body').innerHTML = '<div class="terminal-empty">日志已清空</div>';
+  $('#term-log-count').textContent = '';
+}
+
+// ── SSE 连接 ─────────────────────────────────────────
+function plConnectSSE(since) {
+  if (PL.evtSource) { PL.evtSource.close(); PL.evtSource = null; }
+  if (PL.polling)   { clearInterval(PL.polling); PL.polling = null; }
+
+  const es = new EventSource(`/api/pipeline/logs/stream?since=${since}`);
+  PL.evtSource = es;
+
+  es.onmessage = evt => {
+    try { termAppend([JSON.parse(evt.data)]); } catch (_) {}
+  };
+
+  es.addEventListener('done', evt => {
+    try {
+      const d = JSON.parse(evt.data);
+      plSetStatus(d.status);
+      plSetTime(PL.startTs, new Date().toISOString());
+    } catch (_) {}
+    es.close(); PL.evtSource = null;
+    plRefreshData();
+  });
+
+  es.onerror = () => {
+    es.close(); PL.evtSource = null;
+    if (!PL.polling) plStartPolling(PL.logBuf.length);
+  };
+}
+
+function plStartPolling(since) {
+  let idx = since;
+  PL.polling = setInterval(async () => {
+    try {
+      const d = await fetchJSON(`/api/pipeline/logs?since=${idx}`);
+      if (d.logs.length) { termAppend(d.logs); idx = d.total; }
+      if (d.status !== 'running') {
+        clearInterval(PL.polling); PL.polling = null;
+        plSetStatus(d.status);
+        plSetTime(PL.startTs, new Date().toISOString());
+        plRefreshData();
+      }
+    } catch (_) {}
+  }, 800);
+}
+
+async function plRefreshData() {
+  const btn = $('#btn-refresh-charts');
+  if (btn) { btn.classList.add('spinning'); btn.disabled = true; }
+  try {
+    const [ov, iters] = await Promise.all([
+      fetchJSON('/api/overview'),
+      fetchJSON('/api/iterations'),
+    ]);
+    renderStats(ov, iters);
+    if (iters.length) {
+      renderScoreTrend(iters, ov.threshold);
+      renderDimRadar(iters[iters.length - 1]);
+      renderDimTable(iters, ov.dimension_weights);
+    } else {
+      $('#dim-table-wrap').innerHTML = '<div class="loading">暂无迭代数据，请先运行流水线</div>';
+    }
+    const prompts = await fetchJSON('/api/prompts');
+    renderPromptVersions(prompts);
+  } catch (e) {
+    console.error('[plRefreshData]', e);
+    const wrap = $('#dim-table-wrap');
+    if (wrap) wrap.innerHTML = `<div class="error-msg">刷新失败: ${escapeHtml(e.message)}</div>`;
+  } finally {
+    if (btn) { btn.classList.remove('spinning'); btn.disabled = false; }
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  API 密钥配置
+// ══════════════════════════════════════════════════════
+
+const SOURCE_LABEL = { file: '已配置（文件）', env: '已配置（环境变量）', none: '未配置' };
+
+async function loadKeys() {
+  try {
+    const keys = await fetchJSON('/api/keys');
+    renderKeys(keys);
+  } catch (e) {
+    $('#key-grid').innerHTML = `<div class="error-msg">加载失败：${e.message}</div>`;
+  }
+}
+
+function renderKeys(keys) {
+  const grid = $('#key-grid');
+
+  const setCount  = keys.filter(k => k.is_set).length;
+  const total     = keys.length;
+  const reqMissing = keys.filter(k => k.required && !k.is_set).length;
+
+  // 总体状态
+  const overallEl = $('#keys-overall-status');
+  if (reqMissing > 0) {
+    overallEl.innerHTML = `<span style="color:var(--red);">⚠ 必填密钥未配置（${reqMissing} 个）</span>`;
+  } else {
+    overallEl.innerHTML = `<span style="color:var(--green);">✓ 已配置 ${setCount} / ${total} 个</span>`;
+  }
+
+  grid.innerHTML = keys.map(k => `
+    <div class="key-card ${k.required ? 'required-card' : ''}" id="kcard-${k.key}">
+      <div class="key-card-top">
+        <span class="key-name">${k.key}</span>
+        <span class="key-source-badge ${k.source}">${SOURCE_LABEL[k.source]}</span>
+        ${k.required ? '<span style="font-size:10px;color:var(--accent);">必填</span>' : ''}
+      </div>
+      <div class="key-desc">${k.desc}</div>
+      ${k.masked ? `<div class="key-masked">${k.masked}</div>` : ''}
+      <div class="key-input-row">
+        <input class="key-input" type="password" id="kinput-${k.key}"
+          placeholder="${k.is_set ? '输入新值以覆盖…' : '粘贴 API Key…'}"
+          autocomplete="off" />
+        <button class="key-save-btn" onclick="saveOneKey('${k.key}')">保存</button>
+        ${k.source === 'file'
+          ? `<button class="key-clear-btn" title="清除文件中的配置" onclick="clearOneKey('${k.key}')">✕</button>`
+          : ''}
+      </div>
+      <div class="key-tip" id="ktip-${k.key}"></div>
+    </div>
+  `).join('');
+
+  // 支持 Enter 快速保存
+  keys.forEach(k => {
+    const inp = $(`#kinput-${k.key}`);
+    if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveOneKey(k.key); });
+  });
+}
+
+async function saveOneKey(keyName) {
+  const inp = $(`#kinput-${keyName}`);
+  const tip = $(`#ktip-${keyName}`);
+  const val = inp.value.trim();
+  if (!val) { tip.textContent = '请输入密钥值'; tip.style.color = 'var(--red)'; return; }
+
+  try {
+    const r = await fetch('/api/keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [keyName]: val }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || r.statusText);
+    inp.value = '';
+    tip.textContent = '✓ 已保存';
+    tip.style.color = 'var(--green)';
+    setTimeout(() => { tip.textContent = ''; }, 3000);
+    await loadKeys();   // 刷新状态
+  } catch (e) {
+    tip.textContent = `保存失败：${e.message}`;
+    tip.style.color = 'var(--red)';
+  }
+}
+
+async function clearOneKey(keyName) {
+  if (!confirm(`确定清除 ${keyName} 的文件配置？\n（系统环境变量中的值不受影响）`)) return;
+  try {
+    const r = await fetch(`/api/keys/${keyName}`, { method: 'DELETE' });
+    if (!r.ok) throw new Error((await r.json()).detail);
+    await loadKeys();
+  } catch (e) {
+    alert(`清除失败：${e.message}`);
+  }
+}
+
+// ── 模式卡片切换 ─────────────────────────────────────
+function setupModeCards() {
+  $$('.mode-card').forEach(card => {
+    card.addEventListener('click', () => {
+      $$('.mode-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      card.querySelector('input[type=radio]').checked = true;
+    });
+  });
+}
+
+// ── 恢复选项联动 ─────────────────────────────────────
+function setupResumeOption() {
+  $('#opt-resume-check').addEventListener('change', function () {
+    $('#opt-resume-select-wrap').style.display = this.checked ? '' : 'none';
+  });
+}
+
+// ── 填充提示词版本下拉 ────────────────────────────────
+async function loadResumeOptions() {
+  try {
+    const prompts = await fetchJSON('/api/prompts');
+    const sel = $('#opt-resume-select');
+    // 清除旧选项（保留第一个空选项）
+    while (sel.options.length > 1) sel.remove(1);
+    prompts.forEach(p => {
+      if (!p.filename) return;
+      const opt = document.createElement('option');
+      opt.value       = p.filename;
+      opt.textContent = `${p.label}${p.score != null ? `  (${p.score.toFixed(2)})` : ''}`;
+      sel.appendChild(opt);
+    });
+  } catch (_) {}
+}
+
+// ── 运行按钮 ─────────────────────────────────────────
+function setupPipelineRun() {
+  $('#btn-run').addEventListener('click', async () => {
+    const mode       = document.querySelector('input[name="pl-mode"]:checked')?.value || 'full';
+    const forceRegen = $('#opt-force-regen').checked;
+    const doResume   = $('#opt-resume-check').checked;
+    const resumeFrom = doResume ? $('#opt-resume-select').value : '';
+
+    if (doResume && !resumeFrom) {
+      alert('请先选择要从哪个提示词版本恢复');
+      return;
+    }
+
+    // 密钥校验：检查已启用评测器是否至少有一个有密钥
+    try {
+      const keys = await fetchJSON('/api/keys');
+      const missing = keys.filter(k => k.required && !k.is_set).map(k => k.key);
+      if (missing.length) {
+        const go = confirm(
+          `以下必填密钥尚未配置：\n${missing.join('\n')}\n\n` +
+          `请前往"API 密钥配置"区块填写后再运行。\n\n确定仍要继续？`
+        );
+        if (!go) return;
+      }
+    } catch (_) {}
+
+    termClear();
+    PL.startTs = new Date().toISOString();
+    plSetStatus('running');
+
+    // 耗时计时器
+    const timer = setInterval(() => {
+      if ($('#pl-dot').classList.contains('running')) plSetTime(PL.startTs, null);
+      else clearInterval(timer);
+    }, 1000);
+
+    try {
+      const body = { mode, force_regen: forceRegen };
+      if (resumeFrom) body.resume_from = resumeFrom;
+
+      const r = await fetch('/api/pipeline/run', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body),
+      });
+      const d = await r.json();
+
+      if (!r.ok) {
+        clearInterval(timer);
+        plSetStatus('failed', d.detail || '启动失败');
+        return;
+      }
+      plConnectSSE(0);
+    } catch (e) {
+      clearInterval(timer);
+      plSetStatus('failed', `网络错误: ${e.message}`);
+    }
+  });
+}
+
+// ── 中止按钮 ─────────────────────────────────────────
+function setupPipelineStop() {
+  $('#btn-stop').addEventListener('click', async () => {
+    if (!confirm('确定中止正在运行的流水线？')) return;
+    try {
+      const r = await fetch('/api/pipeline/stop', { method: 'DELETE' });
+      if (!r.ok) {
+        const d = await r.json();
+        alert(d.detail || '中止失败');
+      }
+    } catch (e) {
+      alert(`网络错误: ${e.message}`);
+    }
+  });
+}
+
+// ── 终端工具栏 ───────────────────────────────────────
+function setupTerminalControls() {
+  $('#term-clear').addEventListener('click', termClear);
+  $('#term-copy').addEventListener('click', () => {
+    const text = PL.logBuf.map(e => `[${e.t}] ${e.line}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $('#term-copy');
+      const orig = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    });
+  });
+}
+
+// ── 恢复：刷新页面时若流水线还在跑则重连 ────────────────
+async function plReconnectIfRunning() {
+  try {
+    const s = await fetchJSON('/api/pipeline/status');
+    if (s.status === 'running') {
+      PL.startTs = s.started_at;
+      plSetStatus('running');
+      termAppend([{ seq: 0, t: '--:--:--', line: '[Dashboard] 已重连到运行中的流水线…', stream: 'sys' }]);
+      plConnectSSE(s.log_count);
+    } else if (s.status !== 'idle' && s.log_count > 0) {
+      const d = await fetchJSON('/api/pipeline/logs?since=0');
+      if (d.logs.length) termAppend(d.logs);
+      plSetStatus(s.status);
+      plSetTime(s.started_at, s.finished_at);
+    }
+  } catch (_) {}
+}
+
+// ── 主流程 ─────────────────────────────────────────────────────
+async function init() {
+  try {
+    const [overview, iters, prompts] = await Promise.all([
+      fetchJSON('/api/overview'),
+      fetchJSON('/api/iterations'),
+      fetchJSON('/api/prompts'),
+    ]);
+
+    renderStats(overview, iters);
+    renderAgentCard(overview.agent);
+    renderOptimizerCard(overview.optimizer);
+    renderEvaluators(overview.evaluators);
+    renderQueries(overview.queries, overview.query_source, overview.query_updated_at);
+
+    if (iters.length) {
+      renderScoreTrend(iters, overview.threshold);
+      renderDimRadar(iters[iters.length - 1]);
+      renderDimTable(iters, overview.dimension_weights);
+    }
+
+    renderPromptVersions(prompts);
+
+    // 测评集管理事件
+    setupQueryExport();
+    setupQueryReset();
+    setupQueryUpload();
+
+    // 评分维度配置
+    setupDimensions();
+    await loadDimensions();
+
+    // 密钥配置
+    await loadKeys();
+
+    // 流水线控制台事件
+    setupModeCards();
+    setupResumeOption();
+    setupPipelineRun();
+    setupPipelineStop();
+    setupTerminalControls();
+    await loadResumeOptions();
+    await plReconnectIfRunning();
+
+    // 图表手动刷新
+    $('#btn-refresh-charts').addEventListener('click', () => plRefreshData());
+
+  } catch (e) {
+    $('#topbar-status').innerHTML = `<span class="badge warning">加载失败: ${e.message}</span>`;
+    console.error(e);
+  }
+}
+
+init();
+</script>
+
+<!-- ══ 维度详情编辑弹窗 ══════════════════════════════════════ -->
+<div id="dim-modal" class="dim-modal-backdrop" style="display:none"
+     onclick="if(event.target===this)dimModalCancel()">
+  <div class="dim-modal-box">
+
+    <!-- 标题栏 -->
+    <div class="dim-modal-hdr">
+      <span id="dim-modal-ttl">编辑维度</span>
+      <button class="dim-modal-close" onclick="dimModalCancel()">✕</button>
+    </div>
+
+    <!-- 主体 -->
+    <div class="dim-modal-body">
+
+      <!-- 基本信息 -->
+      <div class="dm-sec-title">基本信息</div>
+      <div class="dm-row col2">
+        <div class="dm-field">
+          <label class="dm-label">维度名称<span class="req">*</span></label>
+          <input class="dm-input" id="dm-name" placeholder="如：结构完整性">
+        </div>
+        <div class="dm-field">
+          <label class="dm-label">键名 (snake_case)<span class="req">*</span></label>
+          <input class="dm-input" id="dm-key" placeholder="如：structure_completeness">
+          <span class="dm-hint" id="dm-key-hint">系统维度键名不可修改</span>
+        </div>
+      </div>
+      <div class="dm-row col2">
+        <div class="dm-field">
+          <label class="dm-label">权重</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input class="dm-input" type="number" id="dm-weight" min="0" max="100" step="0.1"
+                   style="width:80px;text-align:right">
+            <span style="color:var(--text-muted);">%（所有维度之和须等于 100%）</span>
+          </div>
+        </div>
+      </div>
+      <div class="dm-row col1">
+        <div class="dm-field">
+          <label class="dm-label">维度描述</label>
+          <textarea class="dm-input ta short" id="dm-desc"
+                    placeholder="简要说明该维度的评分目标与关注点"></textarea>
+        </div>
+      </div>
+
+      <!-- 必须包含的模块 -->
+      <div class="dm-sec-title">必须包含的模块
+        <span style="font-size:10px;font-weight:400;text-transform:none;color:var(--text-muted);">
+          （可选，将嵌入 LLM 评测提示词）
+        </span>
+      </div>
+      <div class="dm-modules-list" id="dm-modules-list"></div>
+      <button class="dm-add-module-btn" onclick="dimModuleAdd()">＋ 添加模块</button>
+
+      <!-- 评分细则 -->
+      <div class="dm-sec-title" style="margin-top:22px">评分细则（各分段行为描述）</div>
+      <div class="dm-criteria-grid">
+        <div class="dm-criteria-item">
+          <div class="dm-criteria-lbl c-low">1–3 分 · 不合格</div>
+          <textarea class="dm-input ta tall" id="dm-c13"
+                    placeholder="描述得 1-3 分时的表现…"></textarea>
+        </div>
+        <div class="dm-criteria-item">
+          <div class="dm-criteria-lbl c-mid">4–6 分 · 一般</div>
+          <textarea class="dm-input ta tall" id="dm-c46"
+                    placeholder="描述得 4-6 分时的表现…"></textarea>
+        </div>
+        <div class="dm-criteria-item">
+          <div class="dm-criteria-lbl c-good">7–8 分 · 良好</div>
+          <textarea class="dm-input ta tall" id="dm-c78"
+                    placeholder="描述得 7-8 分时的表现…"></textarea>
+        </div>
+        <div class="dm-criteria-item">
+          <div class="dm-criteria-lbl c-best">9–10 分 · 优秀</div>
+          <textarea class="dm-input ta tall" id="dm-c910"
+                    placeholder="描述得 9-10 分时的表现…"></textarea>
+        </div>
+      </div>
+
+    </div><!-- /body -->
+
+    <!-- 底部操作 -->
+    <div class="dim-modal-ftr">
+      <button class="dim-act-btn" onclick="dimModalCancel()">取消</button>
+      <button class="dim-act-btn primary" onclick="dimModalSave()">✓ 保存</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
