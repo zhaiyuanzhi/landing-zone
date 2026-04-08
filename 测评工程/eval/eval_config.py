@@ -167,8 +167,8 @@ OPTIMIZER_MODEL   = "claude-opus-4-6"
 # 流程参数
 # ============================================================
 
-SCORE_THRESHOLD = 7.5    # 加权均分达到该值则停止迭代
-MAX_ITERATIONS  = 2      # 最大迭代轮次
+SCORE_THRESHOLD = 8.0    # 加权均分达到该值则停止迭代
+MAX_ITERATIONS  = 3      # 最大迭代轮次
 
 # 各评分维度权重（须合计 1.0）
 DIMENSION_WEIGHTS = {
@@ -189,6 +189,18 @@ TEST_QUERIES = [
 ]
 
 RESULTS_DIR = "eval_results"
+
+# ── 自定义维度覆盖（由 Dashboard 写入 eval_results/custom_dimensions.json）────
+import json as _json
+import pathlib as _pathlib
+_custom_dims_file = _pathlib.Path(RESULTS_DIR) / "custom_dimensions.json"
+if _custom_dims_file.exists():
+    try:
+        _custom_dims = _json.loads(_custom_dims_file.read_text(encoding="utf-8"))
+        DIMENSION_WEIGHTS = {d["key"]: float(d["weight"]) for d in _custom_dims}
+    except Exception as _err:
+        import warnings as _warnings
+        _warnings.warn(f"[eval_config] 加载自定义维度失败，使用默认权重配置: {_err}")
 
 # ============================================================
 # 启动校验

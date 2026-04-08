@@ -1,0 +1,17 @@
+{
+  "completed_at": "2026-04-08T09:42:13.946026",
+  "total_iterations": 2,
+  "best_score": 8.51,
+  "score_threshold": 8.0,
+  "achieved_goal": true,
+  "score_history": [
+    {
+      "iteration": 1,
+      "score": 7.45
+    },
+    {
+      "iteration": 2,
+      "score": 8.51
+    }
+  ]
+}

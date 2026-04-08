@@ -38,6 +38,46 @@ from eval_rubric import RUBRIC, score_summary
 # 初始提示词来自 eval 目录自包含的 Demo 数据（不依赖上级 market_context.py）
 from demo_market_context import DEMO_SYSTEM_PROMPT as INITIAL_SYSTEM_PROMPT, DEMO_DATA_CONTEXT
 
+# ============================================================
+# 测评集动态加载
+# ============================================================
+
+QUERIES_FILE = Path(__file__).parent / "queries.json"
+
+
+def load_effective_queries() -> list[str]:
+    """
+    加载有效的测评集：优先使用 queries.json（自定义），否则用默认 TEST_QUERIES。
+
+    Returns:
+        测评查询列表
+    """
+    if QUERIES_FILE.exists():
+        try:
+            data = json.loads(QUERIES_FILE.read_text(encoding="utf-8"))
+            queries = data.get("queries", [])
+            source = data.get("source", "unknown")
+            updated_at = data.get("updated_at", "")
+
+            if queries:
+                print(f"\n  [测评集] 使用自定义测评集（来源：{source}）")
+                print(f"  [测评集] 共 {len(queries)} 条测试查询")
+                if updated_at:
+                    print(f"  [测评集] 最近更新时间：{updated_at}")
+                return queries
+        except Exception as e:
+            print(f"\n  [警告] 解析 queries.json 失败：{e}，回退到默认测评集")
+
+    print(f"\n  [测评集] 使用默认测评集（来自 eval_config.TEST_QUERIES）")
+    print(f"  [测评集] 共 {len(TEST_QUERIES)} 条测试查询")
+    return TEST_QUERIES
+
+
+# ============================================================
+# 全局变量：有效测评集（在 run_pipeline 中初始化）
+# ============================================================
+
+effective_queries: list[str] = []
 
 # ============================================================
 # 主流程
@@ -61,6 +101,11 @@ def run_pipeline(
     Returns:
         summary dict
     """
+    global effective_queries
+    # ── 加载有效的测评集（优先使用 queries.json）───────────────
+    effective_queries = load_effective_queries()
+
+
     validate_config()
 
     results_dir = Path(__file__).parent / RESULTS_DIR
@@ -187,7 +232,7 @@ def _run_agents(
     responses_dir = results_dir / "responses"
     responses_dir.mkdir(exist_ok=True)
 
-    total = len(TEST_QUERIES)
+    total = len(effective_queries)
 
     # ── 缓存命中：文件全部已存在且不强制重新生成 ───────────────
     if not force_regen:
@@ -203,7 +248,7 @@ def _run_agents(
     results = []
     print(f"\n  [智能体调用] 共 {total} 个测试查询")
 
-    for i, query in enumerate(TEST_QUERIES, 1):
+    for i, query in enumerate(effective_queries, 1):
         short_q = query[:55] + "..." if len(query) > 55 else query
         print(f"  [{i}/{total}] {short_q}")
 
@@ -431,7 +476,7 @@ def _header(eval_only: bool, max_iter: int):
     print(f"  模式       : {mode_str}")
     print(f"  智能体模型 : qwen3-235b-a22b-instruct-2507")
     print(f"  评测模型   : claude-opus-4-6 (adaptive thinking)")
-    print(f"  测试用例   : {len(TEST_QUERIES)} 条")
+    print(f"  测试用例   : {len(effective_queries)} 条")
     print(f"  目标分数   : {SCORE_THRESHOLD} / 10")
     print(f"  评分维度   : {len(RUBRIC)} 个（{' / '.join(v['name'] for v in RUBRIC.values())}）")
     print("=" * 68)

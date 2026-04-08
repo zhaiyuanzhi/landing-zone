@@ -8,6 +8,7 @@
 
 - [系统概览](#系统概览)
 - [快速开始](#快速开始)
+- [可视化 Dashboard](#可视化-dashboard)
 - [文件结构](#文件结构)
 - [核心流程](#核心流程)
 - [数据来源](#数据来源)
@@ -63,13 +64,13 @@ pip install -r requirements.txt
 export QWEN_API_KEY=your_qwen_api_key
 
 # 评测器（至少配置一个）
-export DOUBAO_API_KEY=4c31545d-d554-4e5a-b98c-5ae3a8886652
-export DEEPSEEK_API_KEY=sk-3cb6ff892be247e7a53f1c828a861db8
+export DOUBAO_API_KEY=xxx
+export DEEPSEEK_API_KEY=xxx
 export ANTHROPIC_API_KEY=your_anthropic_api_key
 
 export QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-export QWEN_API_KEY=sk-4b1540c9763a4ba58fbf34babe2b6644
-export QWEN_EVAL_API_KEY=sk-4b1540c9763a4ba58fbf34babe2b6644
+export QWEN_API_KEY=xxx
+export QWEN_EVAL_API_KEY=xxx
 
 # 优化器（与评测器共用，按 OPTIMIZER_CONFIG 中的 api_key_env 读取）
 # 若优化器选 DeepSeek-R1，则使用 DEEPSEEK_API_KEY，无需额外配置
@@ -99,6 +100,54 @@ python eval_pipeline.py --eval-only --force-regen
 
 ---
 
+## 可视化 Dashboard
+
+基于 FastAPI + Chart.js 的 Web 可视化界面，一键查看所有评测数据，无需阅读 JSON 文件。
+
+### 启动
+
+```bash
+cd eval
+uvicorn dashboard:app --reload --port 8765
+# 访问 http://localhost:8765
+```
+
+### 功能模块
+
+| 模块 | 内容 |
+|------|------|
+| **顶部状态栏** | 达标状态（已达标 / 进行中）、迭代轮次、阈值 |
+| **统计概览** | 最高综合得分、迭代轮次、启用评测器数、测试查询数、目标状态 |
+| **模型配置** | 被测智能体（Qwen3）、各评测器启用/禁用状态及参数、提示词优化器 |
+| **测评集** | 全部测试查询列表 |
+| **分数趋势图** | 折线图展示各轮综合得分变化，标记达标阈值线；雷达图展示最新迭代各维度得分 |
+| **维度对比表** | 每个评分维度的权重、各轮得分条形图、轮次间变化量 Δ、评测器一致性（标准差） |
+| **提示词查看器** | 左侧版本列表（含各版本得分），右侧展示完整提示词内容，点击切换 |
+
+### API 端点
+
+Dashboard 后端提供以下 REST 接口，可直接调用：
+
+```
+GET /api/overview              # 模型配置、测试集、维度权重、整体摘要
+GET /api/iterations            # 所有迭代的得分和维度分明细
+GET /api/iteration/{n}         # 第 n 轮完整评测数据
+GET /api/prompts               # 提示词版本列表（v1 / v2 / best…）
+GET /api/prompt/{version}      # 指定版本提示词全文（version: v1 / v2 / best）
+GET /api/response/{iter}/{q}   # 指定迭代、指定查询的智能体回答原文
+```
+
+### 文件
+
+```
+eval/
+├── dashboard.py          # FastAPI 后端（所有 API 路由）
+└── static/
+    └── index.html        # 单页前端（Chart.js，无需构建工具）
+```
+
+---
+
 ## 文件结构
 
 ```
@@ -120,7 +169,11 @@ eval/
 ├── prompt_optimizer.py      # 提示词优化器（支持多模型后端）
 ├── report.py                # 结果查看器（汇总/详情/Diff/趋势）
 ├── apply_prompt.py          # 将最优提示词写回市场分析提示词模板
+├── dashboard.py             # 可视化 Dashboard 后端（FastAPI）
 ├── requirements.txt         # Python 依赖
+│
+├── static/
+│   └── index.html           # Dashboard 前端（单页，Chart.js）
 │
 ├── data/                    # 历史 CSV 文件（已不参与主流程，仅供参考）
 │
@@ -471,16 +524,16 @@ python3 report.py --evaluators 2
 
 ```bash
 # 预览变更（不实际写入）
-python apply_prompt.py --dry-run
+python3 apply_prompt.py --dry-run
 
 # 将最优提示词写回市场分析提示词模板
-python apply_prompt.py
+python3 apply_prompt.py
 
 # 应用指定版本的提示词
-python apply_prompt.py --from eval_results/prompt_v3.md
+python3 apply_prompt.py --from eval_results/prompt_v3.md
 
 # 列出所有可用的已保存提示词
-python apply_prompt.py --list
+python3 apply_prompt.py --list
 ```
 
 ---

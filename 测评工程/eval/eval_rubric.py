@@ -107,6 +107,46 @@ RUBRIC: dict[str, dict] = {
 }
 
 
+# ── 自定义维度覆盖（由 Dashboard 写入 eval_results/custom_dimensions.json）────
+import json as _json
+import pathlib as _pathlib
+_custom_dims_file = _pathlib.Path("eval_results") / "custom_dimensions.json"
+if _custom_dims_file.exists():
+    try:
+        _custom_dims = _json.loads(_custom_dims_file.read_text(encoding="utf-8"))
+        _new_rubric: dict[str, dict] = {}
+        for _d in _custom_dims:
+            _key = _d["key"]
+            if _key in RUBRIC:
+                # 覆盖已有维度的可编辑字段，保留详细评分标准
+                _entry = dict(RUBRIC[_key])
+                _entry["name"]        = _d.get("name", _entry["name"])
+                _entry["weight"]      = float(_d["weight"])
+                _entry["description"] = _d.get("description") or _entry["description"]
+                if _d.get("criteria"):           # 用户若自定义了评分细则则覆盖
+                    _entry["criteria"] = _d["criteria"]
+                if _d.get("key_modules"):        # 用户若自定义了模块列表则覆盖
+                    _entry["key_modules"] = _d["key_modules"]
+                _new_rubric[_key] = _entry
+            else:
+                # 新增自定义维度
+                _new_rubric[_key] = {
+                    "name":        _d.get("name", _key),
+                    "weight":      float(_d["weight"]),
+                    "description": _d.get("description", ""),
+                    "key_modules": _d.get("key_modules") or [],
+                    "criteria":    _d.get("criteria") or {
+                        "1–3":  "表现很差",
+                        "4–6":  "表现一般",
+                        "7–8":  "表现良好",
+                        "9–10": "表现优秀",
+                    },
+                }
+        RUBRIC = _new_rubric
+    except Exception as _err:
+        import warnings as _warnings
+        _warnings.warn(f"[eval_rubric] 加载自定义维度失败，使用默认评分标准: {_err}")
+
 # ============================================================
 # 工具函数
 # ============================================================

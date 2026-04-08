@@ -5,3 +5,5 @@ pydantic>=2.0.0        # 结构化输出数据模型
 fastapi>=0.100.0       # 主服务依赖（market_context FastAPI 应用）
 uvicorn>=0.23.0        # FastAPI 运行时（可选，用于启动主服务）
 pandas>=2.3.0
+openpyxl>=3.1.0        # Excel 导出/导入（测评集管理）
+python-multipart>=0.0.9 # FastAPI 文件上传支持
